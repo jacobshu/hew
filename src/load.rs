@@ -1,8 +1,10 @@
 use clap::ArgMatches;
 use log::info;
+use std::env;
 use std::fs;
 use std::io;
 use std::process::{Command, Stdio};
+use crate::which;
 
 pub fn init(args: &ArgMatches) {
     info!(
@@ -10,7 +12,8 @@ pub fn init(args: &ArgMatches) {
         args.get_flag("update"),
         args.get_flag("link")
     );
-    install_homebrew();
+    //    install_homebrew();
+    which::paths_in_path();
 }
 
 fn install_homebrew() {
@@ -41,10 +44,13 @@ fn install_homebrew() {
             .expect("Should have been able to read the file");
 
         Command::new("/bin/bash")
-        .env("NONINTERACTIVE", "1")
-        .arg("-c")
-        .arg(install_script)
-        .spawn()
-        .expect("homebrew installation failed to start");
+            .env("NONINTERACTIVE", "1")
+            .arg("-c")
+            .arg(install_script)
+            .spawn()
+            .expect("homebrew installation failed to start");
     }
 }
+
+fn link_dotfiles() {}
+
