@@ -1,10 +1,10 @@
 use clap::ArgMatches;
 use log::info;
-use std::env;
 use std::fs;
 use std::io;
 use std::process::{Command, Stdio};
-use crate::which;
+use crate::utils::which;
+
 
 pub fn init(args: &ArgMatches) {
     info!(
@@ -13,7 +13,7 @@ pub fn init(args: &ArgMatches) {
         args.get_flag("link")
     );
     //    install_homebrew();
-    which::paths_in_path();
+    info!("{:?}", which("dot"));
 }
 
 fn install_homebrew() {

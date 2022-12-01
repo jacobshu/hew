@@ -2,7 +2,7 @@ use clap::{arg, command, Command};
 use log::{error, info, warn};
 use pretty_env_logger;
 mod load;
-mod which;
+mod utils;
 
 fn main() {
     pretty_env_logger::init();
