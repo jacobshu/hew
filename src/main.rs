@@ -1,5 +1,5 @@
 use clap::{arg, command, Command};
-use log::{error, info, warn};
+use log::error;
 use pretty_env_logger;
 mod load;
 mod utils;
