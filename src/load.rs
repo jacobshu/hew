@@ -1,13 +1,11 @@
-use clap::ArgMatches;
-use log::{info, error};
-use std::fs::{ File, read_to_string, remove_file };
-use std::io::copy;
-use std::process::Command;
-use std::path::Path;
-use std::os::unix::fs::symlink;
 use crate::utils::which;
-
-
+use clap::ArgMatches;
+use log::{error, info};
+use std::fs::{read_to_string, remove_file, File};
+use std::io::copy;
+use std::os::unix::fs::symlink;
+use std::path::Path;
+use std::process::Command;
 
 pub fn init(args: &ArgMatches) {
     info!(
@@ -34,8 +32,8 @@ fn install_homebrew() {
         copy(&mut body.as_bytes(), &mut out).expect("failed to copy content");
 
         info!("homebrew install script downloaded");
-        let install_script = read_to_string("homebrew_install.sh")
-            .expect("Should have been able to read the file");
+        let install_script =
+            read_to_string("homebrew_install.sh").expect("Should have been able to read the file");
 
         Command::new("/bin/bash")
             .env("NONINTERACTIVE", "1")
@@ -46,19 +44,20 @@ fn install_homebrew() {
 
         match remove_file(Path::new("homebrew_install.sh")) {
             Ok(_) => info!("homebrew install script removed"),
-            Err(e) => error!("error removing homebrew script, {:?}", e)
+            Err(e) => error!("error removing homebrew script, {:?}", e),
         };
     }
 }
 
 fn link_dotfiles() {
-    let _links: Vec<(&str, &str)> = vec![
-        ("", "")
-    ];
+    let _links: Vec<(&str, &str)> = vec![("", "")];
     let source = Path::new("/Users/jacobshu/Documents/test/text.md");
     let target = Path::new("/Users/jacobshu/Documents/test/d/text.md");
     match symlink(source, target) {
         Ok(_) => info!("symlink created, {:?} => {:?}", source, target),
-        Err(e) => error!("error creating symlink, {:?} => {:?} : {:?}", source, target, e)
+        Err(e) => error!(
+            "error creating symlink, {:?} => {:?} : {:?}",
+            source, target, e
+        ),
     };
 }
