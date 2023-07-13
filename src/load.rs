@@ -1,7 +1,7 @@
 use crate::utils::which;
 use clap::ArgMatches;
 use log::{error, info};
-use std::fs::{read_to_string, remove_file, File, canonicalize, create_dir_all};
+use std::fs::{read_to_string, remove_file, File, canonicalize, create_dir_all, remove_dir_all};
 use std::io::copy;
 use std::os::unix::fs::symlink;
 use std::path::Path;
@@ -71,14 +71,27 @@ fn link_dotfiles() {
 
 
     for link in data.dotfiles {
+        if link.target_dir == "" && link.target_file == "" {
+            println!("cannot overwrite home directory");
+            continue;
+        }
+            
         let source = canonicalize(Path::new(&link.source)).unwrap();
 
         let target_dir = dirs::home_dir().unwrap().join(&link.target_dir);
         create_dir_all(&target_dir).expect("failed to create target directory path");
 
         let target = target_dir.join(&link.target_file);
-        if target.exists() {
-            remove_file(&target).expect("failed to remove file");
+        info!("{:?} is dir {:?}", source, source.is_dir());
+        info!("{:?} is dir {:?}", target, target.is_dir());
+        if target.exists() && target != dirs::home_dir().unwrap() {
+            if target.is_dir() {
+              info!("removing directory {:?}", target);
+              remove_dir_all(&target).expect("failed to delete directory");
+            } else {
+              info!("removing file {:?}", target);
+              remove_file(&target).expect("failed to remove file");
+            }
         }
         match symlink(&source, &target) {
             Ok(_) => info!("symlink created, {:?} => {:?}", source, target),
