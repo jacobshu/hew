@@ -1,6 +1,6 @@
 use crate::utils::which;
 use clap::ArgMatches;
-use log::{error, info};
+use log::{debug, error, info};
 use std::fs::{read_to_string, remove_file, File, canonicalize, create_dir_all, remove_dir_all};
 use std::io::copy;
 use std::os::unix::fs::symlink;
@@ -18,8 +18,7 @@ struct Data {
 #[derive(Deserialize)]
 struct Symlink {
     source: String,
-    target_dir: String,
-    target_file: String,
+    target: String,
 }
 
 pub fn init(args: &ArgMatches) {
@@ -71,28 +70,56 @@ fn link_dotfiles() {
 
 
     for link in data.dotfiles {
-        if link.target_dir == "" && link.target_file == "" {
-            println!("cannot overwrite home directory");
-            continue;
+        match (link.source == "", link.target == "") {
+            (true, true) => { error!("must provide source and target"); continue; },
+            (true, false) => { error!("must provide source"); continue; },
+            (false, true) => { error!("must provide target"); continue; },
+            (false, false) => (),
         }
-            
+        
         let source = canonicalize(Path::new(&link.source)).unwrap();
-
-        let target_dir = dirs::home_dir().unwrap().join(&link.target_dir);
-        create_dir_all(&target_dir).expect("failed to create target directory path");
-
-        let target = target_dir.join(&link.target_file);
-        info!("{:?} is dir {:?}", source, source.is_dir());
-        info!("{:?} is dir {:?}", target, target.is_dir());
-        if target.exists() && target != dirs::home_dir().unwrap() {
-            if target.is_dir() {
-              info!("removing directory {:?}", target);
-              remove_dir_all(&target).expect("failed to delete directory");
-            } else {
-              info!("removing file {:?}", target);
-              remove_file(&target).expect("failed to remove file");
-            }
+        let target = dirs::home_dir().unwrap().join(&link.target);
+        
+        let do_exist = (source.exists(), target.exists());
+        match do_exist {
+            (false, _) => { error!("source does not exist: {:?}", source); continue; },
+            (true, false) => { 
+                let mut target_dir = dirs::home_dir().unwrap().join(&link.target);
+                match source.is_dir() {
+                    true => { 
+                        info!("target directory does not exist. creating it...");
+                        create_dir_all(target_dir).expect("failed to create target directory");
+                    },
+                    false => {
+                        target_dir.pop();
+                        info!("target file does not exist: {:?}... ensuring directory path exists: {:?}", target, target_dir);
+                        create_dir_all(target_dir).expect("failed to create directory path");
+                    }
+                }
+            },
+            (true, true) => ()
         }
+
+        let are_dirs = (source.is_dir(), target.is_dir());
+        match are_dirs {
+            (false, false) => { 
+                debug!("{:?} and {:?} are files", source, target); 
+                remove_file(&target).expect("failed to remove target file");
+            },
+            (true, true) => { 
+                debug!("{:?} and {:?} are directories", source, target); 
+                if target != dirs::home_dir().unwrap() { 
+                    remove_dir_all(&target).expect("failed to remove target directory");
+                }
+            },
+            _ => { 
+                error!("{:?} and {:?} are of different types", source, target);
+                error!("source: file {:?}, directory {:?}", source.is_file(), source.is_dir());
+                error!("target: file {:?}, directory {:?}", target.is_file(), target.is_dir());
+                continue;
+            },
+        }
+
         match symlink(&source, &target) {
             Ok(_) => info!("symlink created, {:?} => {:?}", source, target),
             Err(e) => error!(
