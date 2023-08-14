@@ -71,15 +71,35 @@ fn link_dotfiles() {
 
     for link in data.dotfiles {
         match (link.source == "", link.target == "") {
-            (true, true) => { error!("must provide source and target"); continue; },
-            (true, false) => { error!("must provide source"); continue; },
-            (false, true) => { error!("must provide target"); continue; },
+            (true, true) => { error!("must provide source and target"); },
+            (true, false) => { error!("must provide source"); },
+            (false, true) => { error!("must provide target"); },
             (false, false) => (),
         }
         
         let source = canonicalize(Path::new(&link.source)).unwrap();
         let target = dirs::home_dir().unwrap().join(&link.target);
-        
+       
+       
+        // is_dir and is_file imply existence, symlinks will return true for these as well
+        let source_status = (source.is_dir(), source.is_file());
+        let target_status = (target.is_dir(), target.is_file());
+
+        match (source_status, target_status) {
+            ((false, false), (_, _)) => { error!("target {:?} does not exist", target) },
+            ((true, true), (_, _)) => { info!("not possible, cannot be dir and file") }
+            ((false, true), (true, _)) => {
+                error!("{:?} and {:?} are of different types", source, target);
+            }, 
+            ((false, true), (_, true)) => {}, // source is file, target is file
+            ((false, true), (false, false)) => {}, // source is file, target doesn't exist
+            ((true, false), (true, _)) => {}, // source is dir, target is dir
+            ((true, false), (_, true)) => {
+                error!("{:?} and {:?} are of different types", source, target);
+            },
+            ((true, false), (false, false)) => {}, // source is dir, target doesn't exist
+        }
+
         let do_exist = (source.exists(), target.exists());
         match do_exist {
             (false, _) => { error!("source does not exist: {:?}", source); continue; },
@@ -99,6 +119,9 @@ fn link_dotfiles() {
             },
             (true, true) => ()
         }
+        
+        // target "/Users/jacobshu/.warp/themes/forestfox.yaml", is dir false, is file true, symlink: true, exists true
+        debug!("target {:?}, is dir {:?}, is file {:?}, symlink: {:?}, exists {:?}", target, target.is_dir(), target.is_file(), target.is_symlink(), target.exists());
 
         let are_dirs = (source.is_dir(), target.is_dir());
         match are_dirs {
@@ -113,7 +136,6 @@ fn link_dotfiles() {
                 }
             },
             _ => { 
-                error!("{:?} and {:?} are of different types", source, target);
                 error!("source: file {:?}, directory {:?}", source.is_file(), source.is_dir());
                 error!("target: file {:?}, directory {:?}", target.is_file(), target.is_dir());
                 continue;
