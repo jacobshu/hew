@@ -27,8 +27,9 @@ pub fn init(args: &ArgMatches) {
         args.get_flag("update"),
         args.get_flag("link")
     );
+    let symlink_config = "../config/symlinks.toml";
     install_homebrew();
-    link_dotfiles();
+    link_dotfiles(symlink_config);
 }
 
 fn install_homebrew() {
@@ -63,11 +64,10 @@ fn install_homebrew() {
     }
 }
 
-fn link_dotfiles() {
-    let filename = Path::new("../config/symlinks.toml");
+fn link_dotfiles(config: &str) {
+    let filename = Path::new(&config);
     let contents = read_to_string(filename).expect("error reading symlink config file");
     let data: Data = from_str(&contents).expect("error loading data from config file");
-
 
     for link in data.dotfiles {
         match (link.source == "", link.target == "") {
@@ -80,66 +80,47 @@ fn link_dotfiles() {
         let source = canonicalize(Path::new(&link.source)).unwrap();
         let target = dirs::home_dir().unwrap().join(&link.target);
        
-       
         // is_dir and is_file imply existence, symlinks will return true for these as well
         let source_status = (source.is_dir(), source.is_file());
         let target_status = (target.is_dir(), target.is_file());
 
         match (source_status, target_status) {
             ((false, false), (_, _)) => { error!("target {:?} does not exist", target) },
-            ((true, true), (_, _)) => { info!("not possible, cannot be dir and file") }
-            ((false, true), (true, _)) => {
-                error!("{:?} and {:?} are of different types", source, target);
-            }, 
-            ((false, true), (_, true)) => {}, // source is file, target is file
-            ((false, true), (false, false)) => {}, // source is file, target doesn't exist
-            ((true, false), (true, _)) => {}, // source is dir, target is dir
+            ((true, true), (_, _)) => { error!("not possible, cannot be dir and file") }
+            ((_, _), (true, true)) => { error!("not possible, cannot be dir and file") }
             ((true, false), (_, true)) => {
                 error!("{:?} and {:?} are of different types", source, target);
             },
-            ((true, false), (false, false)) => {}, // source is dir, target doesn't exist
-        }
-
-        let do_exist = (source.exists(), target.exists());
-        match do_exist {
-            (false, _) => { error!("source does not exist: {:?}", source); continue; },
-            (true, false) => { 
-                let mut target_dir = dirs::home_dir().unwrap().join(&link.target);
-                match source.is_dir() {
-                    true => { 
-                        info!("target directory does not exist. creating it...");
-                        create_dir_all(target_dir).expect("failed to create target directory");
-                    },
-                    false => {
-                        target_dir.pop();
-                        info!("target file does not exist: {:?}... ensuring directory path exists: {:?}", target, target_dir);
-                        create_dir_all(target_dir).expect("failed to create directory path");
-                    }
-                }
+            ((false, true), (true, _)) => {
+                error!("{:?} and {:?} are of different types", source, target);
             },
-            (true, true) => ()
-        }
-        
-        // target "/Users/jacobshu/.warp/themes/forestfox.yaml", is dir false, is file true, symlink: true, exists true
-        debug!("target {:?}, is dir {:?}, is file {:?}, symlink: {:?}, exists {:?}", target, target.is_dir(), target.is_file(), target.is_symlink(), target.exists());
-
-        let are_dirs = (source.is_dir(), target.is_dir());
-        match are_dirs {
-            (false, false) => { 
-                debug!("{:?} and {:?} are files", source, target); 
+            
+            // source & target are files: remove target
+            ((false, true), (_, true)) => {
                 remove_file(&target).expect("failed to remove target file");
             },
-            (true, true) => { 
-                debug!("{:?} and {:?} are directories", source, target); 
+            
+            // source is file, target doesn't exist
+            ((false, true), (false, false)) => { 
+                let mut target_dir = dirs::home_dir().unwrap().join(&link.target);
+                target_dir.pop();
+                info!("target file does not exist: {:?}... ensuring directory path exists: {:?}", target, target_dir);
+                create_dir_all(target_dir).expect("failed to create directory path"); 
+            }, 
+           
+            // source is dir, target is dir, remove target
+            ((true, false), (true, _)) => { 
                 if target != dirs::home_dir().unwrap() { 
                     remove_dir_all(&target).expect("failed to remove target directory");
                 }
             },
-            _ => { 
-                error!("source: file {:?}, directory {:?}", source.is_file(), source.is_dir());
-                error!("target: file {:?}, directory {:?}", target.is_file(), target.is_dir());
-                continue;
-            },
+
+            // source is dir, target doesn't exist
+            ((true, false), (false, false)) => { 
+                let target_dir = dirs::home_dir().unwrap().join(&link.target);
+                info!("target directory does not exist. creating it...");
+                create_dir_all(target_dir).expect("failed to create target directory"); 
+            }, 
         }
 
         match symlink(&source, &target) {
@@ -151,3 +132,6 @@ fn link_dotfiles() {
         };
     }
 }
+
+
+
