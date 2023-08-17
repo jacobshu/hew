@@ -1,6 +1,6 @@
 use crate::utils::which;
 use clap::ArgMatches;
-use log::{debug, error, info};
+use log::{error, info};
 use std::fs::{read_to_string, remove_file, File, canonicalize, create_dir_all, remove_dir_all};
 use std::io::copy;
 use std::os::unix::fs::symlink;
@@ -76,10 +76,16 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
    
     if is_empty.is_err() { return Err(is_empty.unwrap_err().to_string()) }
 
-    println!("raw source: {:?}, raw target: {:?}", link.source, link.target);
-    let source = canonicalize(Path::new(&link.source)).unwrap();
+    println!("raw source {:?},\nraw target {:?}", link.source, link.target);
+    let source_path: Result<_, &str> = match canonicalize(Path::new(&link.source)) {
+        Ok(path) => Ok(path),
+        Err(_) => { Err("source does not exist") },
+    };
+
+    if source_path.is_err() { return Err(source_path.unwrap_err().to_string()) }
+    let source = source_path.unwrap();
     let target = dirs::home_dir().unwrap().join(&link.target);
-    println!("resolved source: {:?}, resolved target: {:?}", source, target);
+    println!("resolved source: {:?},\nresolved target: {:?}", source, target);
 
     // is_dir and is_file imply existence, symlinks will return true for these as well
     let source_status = (source.is_dir(), source.is_file());
@@ -121,8 +127,9 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
 
         // source is dir, target doesn't exist
         ((true, false), (false, false)) => { 
+            println!("source is dir, target doesn't exist");
             let target_dir = dirs::home_dir().unwrap().join(&link.target);
-            info!("target directory does not exist. creating it...");
+            println!("target directory {:?} does not exist. creating it...", target_dir);
             create_dir_all(target_dir).expect("failed to create target directory");
             Ok(())
         }, 
@@ -169,13 +176,8 @@ mod tests {
         let tmp = temp_dir();
         create_dir_all(format!("{}/symlinks/{}/source/dir", tmp.display(), case)).expect("failed source dir setup");
         create_dir_all(format!("{}/symlinks/{}/target/dir", tmp.display(), case)).expect("failed target dir setup");
-        create_dir_all(format!("{}/symlinks/{}/source/symlink_dir_case", tmp.display(), case)).expect("failed target dir setup");
-        create_dir_all(format!("{}/symlinks/{}/target/symlink_dir", tmp.display(), case)).expect("failed target dir setup");
-        create_dir_all(format!("{}/symlinks/{}/source/symlink_not_there_dir", tmp.display(), case)).expect("failed target dir setup");
-        File::create(format!("{}/symlinks/{}/source/file_exists_case.yaml", tmp.display(), case)).expect("error creating file");
-        File::create(format!("{}/symlinks/{}/target/file_exists.yaml", tmp.display(), case)).expect("error creating file");
-        File::create(format!("{}/symlinks/{}/target/file_not_exists_case.yaml", tmp.display(), case)).expect("error creating file");
-        File::create(format!("{}/symlinks/{}/target/file_and_dir_not_exsits_case.yaml", tmp.display(), case)).expect("error creating file");
+        File::create(format!("{}/symlinks/{}/source/file.yaml", tmp.display(), case)).expect("error creating file");
+        File::create(format!("{}/symlinks/{}/target/file.yaml", tmp.display(), case)).expect("error creating file");
    }
 
     fn teardown(case: String) {
@@ -190,14 +192,15 @@ mod tests {
             source: format!("{}symlinks/{}/source/{}", tmp, ctx.case, ctx.source),
             target: format!("{}symlinks/{}/target/{}", tmp, ctx.case, ctx.target),
         };
-        println!("{:?}", link.source);
         let output: Result<String, String> = create_symlink(link);
+        println!("{:?}", output);
+        teardown(ctx.case);
+        
         if ctx.success {
             assert!(output.is_ok())
         } else {
             assert!(output.is_err())
         }
-        teardown(ctx.case);
     }
 
     #[test]
@@ -258,8 +261,8 @@ mod tests {
     fn file_exists_case() {
         let ctx: TestContext = TestContext {
             case: String::from("target_file_exists"),
-            source: String::from("file_exists_case.yaml"),
-            target: String::from("file_exists.yaml"),
+            source: String::from("file.yaml"),
+            target: String::from("file.yaml"),
             success: true,
         };
         run_symlink_test(ctx);
@@ -269,7 +272,7 @@ mod tests {
     fn target_file_nonexistent() {
         let ctx: TestContext = TestContext {
             case: "target_file_nonexistent".to_string(),
-            source: "file_not_exists_case.yaml".to_string(),
+            source: "file.yaml".to_string(),
             target: "not_there_file.yaml".to_string(),
             success: true,
         };
@@ -280,8 +283,8 @@ mod tests {
     fn create_full_path() {
         let ctx: TestContext = TestContext {
             case: "create_full_path".to_string(),
-            source: "file_and_dir_not_exsits_case.yaml".to_string(),
-            target: "not_there_dir/not_there_file.yaml".to_string(),
+            source: "file.yaml".to_string(),
+            target: "not_there_dir/file.yaml".to_string(),
             success: true,
         };
         run_symlink_test(ctx);
@@ -291,8 +294,8 @@ mod tests {
     fn dir_case() {
         let ctx: TestContext = TestContext {
             case: "dir_case".to_string(),
-            source: "symlink_dir_case".to_string(),
-            target: "symlink_dir".to_string(),
+            source: "dir".to_string(),
+            target: "dir".to_string(),
             success: true,
         };
         run_symlink_test(ctx);
@@ -302,7 +305,7 @@ mod tests {
     fn nonexistent_dir_case() {
         let ctx: TestContext = TestContext {
             case: "nonexistent_dir_case".to_string(),
-            source: "symlink_not_there_dir".to_string(),
+            source: "dir".to_string(),
             target: "not_there_dir".to_string(),
             success: true,
         };
