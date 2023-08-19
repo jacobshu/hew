@@ -1,3 +1,4 @@
+use std::env::set_var;
 use clap::{arg, command, Command};
 use log::error;
 use pretty_env_logger;
@@ -5,6 +6,7 @@ mod load;
 mod utils;
 
 fn main() {
+    set_var("RUST_LOG", "INFO");
     pretty_env_logger::init();
 
     let matches = command!() // requires `cargo` feature
