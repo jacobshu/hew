@@ -1,7 +1,7 @@
 use crate::utils::which;
 use clap::ArgMatches;
-use log::{error, info};
-use std::fs::{read_to_string, remove_file, File, canonicalize, create_dir_all, remove_dir_all};
+use log::{debug, error, info};
+use std::fs::{canonicalize, create_dir_all, File, read_to_string, remove_dir_all, remove_file};
 use std::io::copy;
 use std::os::unix::fs::symlink;
 use std::path::Path;
@@ -76,7 +76,6 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
    
     if is_empty.is_err() { return Err(is_empty.unwrap_err().to_string()) }
 
-    println!("raw source {:?},\nraw target {:?}", link.source, link.target);
     let source_path: Result<_, &str> = match canonicalize(Path::new(&link.source)) {
         Ok(path) => Ok(path),
         Err(_) => { Err("source does not exist") },
@@ -85,7 +84,6 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
     if source_path.is_err() { return Err(source_path.unwrap_err().to_string()) }
     let source = source_path.unwrap();
     let target = dirs::home_dir().unwrap().join(&link.target);
-    println!("resolved source: {:?},\nresolved target: {:?}", source, target);
 
     // is_dir and is_file imply existence, symlinks will return true for these as well
     let source_status = (source.is_dir(), source.is_file());
@@ -127,9 +125,8 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
 
         // source is dir, target doesn't exist
         ((true, false), (false, false)) => { 
-            println!("source is dir, target doesn't exist");
-            let target_dir = dirs::home_dir().unwrap().join(&link.target);
-            println!("target directory {:?} does not exist. creating it...", target_dir);
+            let mut target_dir = dirs::home_dir().unwrap().join(&link.target);
+            debug!("target directory {:?} does not exist. ensuring subpath exists...", target_dir.pop());
             create_dir_all(target_dir).expect("failed to create target directory");
             Ok(())
         }, 
@@ -150,7 +147,7 @@ fn link_dotfiles(config: &str) {
     let filename = Path::new(&config);
     let contents = read_to_string(filename).expect("error reading symlink config file");
     let data: Data = from_str(&contents).expect("error loading data from config file");
-
+    info!("linking dotfiles...");
     for link in data.dotfiles {
         match create_symlink(link) {
             Ok(s) => s,
@@ -193,7 +190,6 @@ mod tests {
             target: format!("{}symlinks/{}/target/{}", tmp, ctx.case, ctx.target),
         };
         let output: Result<String, String> = create_symlink(link);
-        println!("{:?}", output);
         teardown(ctx.case);
         
         if ctx.success {
@@ -307,6 +303,17 @@ mod tests {
             case: "nonexistent_dir_case".to_string(),
             source: "dir".to_string(),
             target: "not_there_dir".to_string(),
+            success: true,
+        };
+        run_symlink_test(ctx);
+    }
+
+    #[test]
+    fn nonexistent_nested_dir_case() {
+        let ctx: TestContext = TestContext {
+            case: "nonexistent_nested_dir_case".to_string(),
+            source: "dir".to_string(),
+            target: "not_there_dir/still_not_there".to_string(),
             success: true,
         };
         run_symlink_test(ctx);
