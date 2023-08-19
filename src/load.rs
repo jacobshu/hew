@@ -126,7 +126,8 @@ fn create_symlink(link: Symlink) -> Result<String, String> {
         // source is dir, target doesn't exist
         ((true, false), (false, false)) => { 
             let mut target_dir = dirs::home_dir().unwrap().join(&link.target);
-            debug!("target directory {:?} does not exist. ensuring subpath exists...", target_dir.pop());
+            target_dir.pop();
+            debug!("target directory {:?} does not exist. ensuring subpath exists...", target_dir);
             create_dir_all(target_dir).expect("failed to create target directory");
             Ok(())
         }, 
