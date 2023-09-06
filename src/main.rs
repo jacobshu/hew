@@ -4,6 +4,7 @@ use log::error;
 use pretty_env_logger;
 mod load;
 mod utils;
+mod task;
 
 fn main() {
     set_var("RUST_LOG", "INFO");
@@ -19,11 +20,21 @@ fn main() {
                 .arg(arg!(update: -u --update "run updates only"))
                 .arg(arg!(link: -s --link "symlink dotfiles")),
         )
+        .subcommand(
+            Command::new("task")
+                .about("Start the task manager")
+                .arg(arg!(add: -a --add "add a task to the list"))
+                .arg(arg!(list: -l --list "list all open tasks")),
+            )
         .get_matches();
 
     match matches.subcommand() {
         Some(("load", sub_matches)) => {
             load::init(sub_matches);
+        }
+        Some(("task", sub_matches)) => {
+            println!("run task with matches: {:?}", sub_matches);
+            task::init();
         }
         _ => error!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
