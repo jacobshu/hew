@@ -4,9 +4,9 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
-use crate::{app::App, tui::Frame};
+use crate::task::{app::App, tui::Frame};
 
-pub fn render(f: &mut Frame<'_>, app: &App) {
+pub fn render(app: &App, f: &mut Frame<'_>) {
     f.render_widget(
         Paragraph::new(format!(
             "

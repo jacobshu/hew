@@ -1,7 +1,7 @@
 use crate::task::app::App;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-fn update(app: &mut App, key_event: KeyEvent) {
+pub fn update(app: &mut App, key_event: KeyEvent) {
     match key_event.code {
         KeyCode::Esc | KeyCode::Char('q') => app.quit(),
         KeyCode::Char('c') | KeyCode::Char('C') => {

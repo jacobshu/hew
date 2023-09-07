@@ -1,6 +1,6 @@
 #[derive(Debug, Default)]
 pub struct App {
-    counter: i64,
+    pub counter: i64,
     pub should_quit: bool,
 }
 
@@ -29,7 +29,6 @@ impl App {
 }
 
 mod tests {
-    use crate::task::App;
     #[test]
     fn test_app_increment_counter() {
         let mut app = App::default();
