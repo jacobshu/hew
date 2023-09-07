@@ -1,10 +1,10 @@
-use std::env::set_var;
 use clap::{arg, command, Command};
 use log::error;
 use pretty_env_logger;
+use std::env::set_var;
 mod load;
-mod utils;
 mod task;
+mod utils;
 
 fn main() {
     set_var("RUST_LOG", "INFO");
@@ -25,7 +25,7 @@ fn main() {
                 .about("Start the task manager")
                 .arg(arg!(add: -a --add "add a task to the list"))
                 .arg(arg!(list: -l --list "list all open tasks")),
-            )
+        )
         .get_matches();
 
     match matches.subcommand() {
