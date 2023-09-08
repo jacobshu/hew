@@ -34,7 +34,7 @@ fn main() {
         }
         Some(("task", sub_matches)) => {
             println!("run task with matches: {:?}", sub_matches);
-            task::start();
+            let _t = task::start();
         }
         _ => error!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }

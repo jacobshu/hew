@@ -1,5 +1,6 @@
 use ratatui::{
     layout::Alignment,
+    prelude::{Constraint, Direction, Layout},
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
@@ -7,6 +8,16 @@ use ratatui::{
 use crate::task::{app::App, tui::Frame};
 
 pub fn render(app: &App, f: &mut Frame<'_>) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ]
+        .as_ref())
+    .split(f.size());
+
     f.render_widget(
         Paragraph::new(format!(
             "
@@ -25,6 +36,6 @@ pub fn render(app: &App, f: &mut Frame<'_>) {
         )
         .style(Style::default().fg(Color::Blue))
         .alignment(Alignment::Center),
-        f.size(),
+        chunks[0],
     );
 }
