@@ -23,24 +23,26 @@ func openDB() *devDB {
 	}
 
   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-  defer cancel()
 
   client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
 
-	defer func() {
-		if err := client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
-  t := devDB{db: client, ctx: ctx}
+  t := devDB{
+    db: client, 
+    ctx: ctx, 
+    closeDb: func() { 
+      cancel()
+      if err := client.Disconnect(ctx); err != nil {
+        panic(err)
+      }
+    },
+  }
   return &t
 }
 
-var Db = openDB()
+var taskDb = openDB()
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {

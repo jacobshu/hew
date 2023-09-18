@@ -23,7 +23,7 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID        primitive.ObjectID `bson:"_id"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
   Name      string
 	Project   string
 	Status    string
@@ -51,6 +51,7 @@ func (s status) Int() int {
 type devDB struct {
 	db      *mongo.Client
   ctx     context.Context
+  closeDb func()
 }
 
 func (t *devDB) insert(name, project string) error {
@@ -60,12 +61,14 @@ func (t *devDB) insert(name, project string) error {
     Status: todo.String(), 
     Created: time.Now(),
   }
-  result, err := t.db.Database("tasks").Collection("tasks").InsertOne(context.TODO(), newTask)
+  result, err := t.db.Database("dev").Collection("tasks").InsertOne(context.TODO(), newTask)
   if err != nil {
     return err
   }
 
   fmt.Printf("insert result: %+v", result)
+
+  t.closeDb()
   return nil
 }
 

@@ -33,11 +33,10 @@ var addCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-    fmt.Printf("%+v", project) 
-    // TODO
-		//if err := t.insert(args[0], project); err != nil {
-	  //	return err
-		//}
+    fmt.Printf("%+v, %+v", args[0], project) 
+		if err := taskDb.insert(args[0], project); err != nil {
+	  	return err
+		}
 		return nil
 	},
 }
