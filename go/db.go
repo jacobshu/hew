@@ -1,10 +1,10 @@
 package main
 
 import (
-  "context"
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-  "go.mongodb.org/mongo-driver/bson/primitive"
 	//"os"
 	//"reflect"
 	"time"
@@ -24,11 +24,11 @@ func (s status) String() string {
 
 type task struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-  Name      string
+	Name      string
 	Project   string
 	Status    string
 	Created   time.Time
-  Completed time.Time `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
+	Completed time.Time `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
 }
 
 // implement list.Item & list.DefaultItem
@@ -50,26 +50,26 @@ func (s status) Int() int {
 
 type devDB struct {
 	db      *mongo.Client
-  ctx     context.Context
-  closeDb func()
+	ctx     context.Context
+	closeDb func()
 }
 
-func (t *devDB) insert(name, project string) error {
-  newTask := task{
-    Name: name, 
-    Project: project, 
-    Status: todo.String(), 
-    Created: time.Now(),
-  }
-  result, err := t.db.Database("dev").Collection("tasks").InsertOne(context.TODO(), newTask)
-  if err != nil {
-    return err
-  }
+func (t *devDB) insertTask(name, project string) error {
+	newTask := task{
+		Name:    name,
+		Project: project,
+		Status:  todo.String(),
+		Created: time.Now(),
+	}
+	result, err := t.db.Database("dev").Collection("tasks").InsertOne(context.TODO(), newTask)
+	if err != nil {
+		return err
+	}
 
-  fmt.Printf("insert result: %+v", result)
+	fmt.Printf("insert result: %+v", result)
 
-  t.closeDb()
-  return nil
+	t.closeDb()
+	return nil
 }
 
 /*
