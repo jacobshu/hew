@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	//"os"
@@ -112,44 +113,42 @@ func (orig *task) merge(t task) {
 		}
 	}
 }
+*/
 
-func (t *taskDB) getTasks() ([]task, error) {
+func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
 
-  coll := client.Database("dev").Collection("tasks")
-  filter := bson.D{{"name", "Bagels N Buns"}}
-
-  var result Task
-  err = coll.FindOne(context.TODO(), filter).Decode(&result)
+  var results []bson.M
+  err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}}).Decode(&result)
 
   if err != nil {
     if err == mongo.ErrNoDocuments {
       // This error means your query did not match any documents.
-      return tasks
+      return tasks, nil
     }
 		return tasks, fmt.Errorf("unable to get values: %w", err)
   }
 
-  //rows, err := t.db.Query("SELECT * FROM tasks")
-	if err != nil {
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
 	}
-	for rows.Next() {
-		var task task
-		err = rows.Scan(
-			&task.ID,
-			&task.Name,
-			&task.Project,
-			&task.Status,
-			&task.Created,
-		)
-		if err != nil {
-			return tasks, err
-		}
+
+	for _, result := range results {
+    cursor.Decode(&result)
+    var task = task{
+			result.ID,
+			result.Name,
+			result.Project,
+			result.Status,
+			result.Created,
+    }
+		
 		tasks = append(tasks, task)
 	}
+  
 	return tasks, err
 }
-
+/*
 func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 	var tasks []task
 	rows, err := t.db.Query("SELECT * FROM tasks WHERE status = ?", status)

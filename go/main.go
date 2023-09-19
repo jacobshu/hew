@@ -42,7 +42,7 @@ func openDB() *devDB {
 	return &t
 }
 
-var taskDb = openDB()
+var devDb = openDB()
 
 func main() {
 	if err := BuildCmdTree().Execute(); err != nil {

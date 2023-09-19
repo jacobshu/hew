@@ -73,19 +73,19 @@ func taskAdd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	fmt.Printf("%+v, %+v", args[0], project)
-	if err := taskDb.insertTask(args[0], project); err != nil {
+	if err := devDb.insertTask(args[0], project); err != nil {
 		return err
 	}
 	return nil
 }
 
 func taskList(cmd *cobra.Command, args []string) error {
-	//tasks, err := t.getTasks()
-	//if err != nil {
-	// return err
-	//}
-	//table := setupTable(tasks)
-	//fmt.Print(table.View())
+	tasks, err := devDb.getTasks()
+	if err != nil {
+	 return err
+	}
+	table := setupTable(tasks)
+	fmt.Print(table.View())
 	return nil
 }
 
