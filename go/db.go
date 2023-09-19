@@ -24,12 +24,12 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Name      string
-	Project   string
-	Status    string
-	Created   time.Time
-	Completed time.Time `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
+	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name      string              `json:"name" bson:"name"`
+  Project   string              `json:"project" bson:"project"`
+  Status    string              `json:"status" bson:"status"`
+  Created   time.Time           `json:"created" bson:"created"`
+	Completed time.Time           `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
 }
 
 // implement list.Item & list.DefaultItem
@@ -119,7 +119,7 @@ func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
 
   var results []bson.M
-  err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}}).Decode(&result)
+  cursor, err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}})
 
   if err != nil {
     if err == mongo.ErrNoDocuments {
@@ -134,13 +134,15 @@ func (t *devDB) getTasks() ([]task, error) {
 	}
 
 	for _, result := range results {
-    cursor.Decode(&result)
+    //cursor.Decode(&result)
+    fmt.Printf("%+v\n", result["name"])
     var task = task{
-			result.ID,
-			result.Name,
-			result.Project,
-			result.Status,
-			result.Created,
+      ID: result["_id"].(primitive.ObjectID),
+      Name: result["name"].(string),
+      Project: result["project"].(string),
+      Status: result["status"].(string),
+      Created: result["created"].(primitive.DateTime).Time(),
+      //Completed: result["completed"].(primitive.DateTime).Time(),
     }
 		
 		tasks = append(tasks, task)
