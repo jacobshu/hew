@@ -72,7 +72,6 @@ func taskAdd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%+v, %+v", args[0], project)
 	if err := devDb.insertTask(args[0], project); err != nil {
 		return err
 	}
@@ -82,7 +81,7 @@ func taskAdd(cmd *cobra.Command, args []string) error {
 func taskList(cmd *cobra.Command, args []string) error {
 	tasks, err := devDb.getTasks()
 	if err != nil {
-	 return err
+		return err
 	}
 	table := setupTable(tasks)
 	fmt.Print(table.View())
@@ -175,16 +174,16 @@ func setupTable(tasks []task) table.Model {
 	}
 
 	columns := []table.Column{
-		{Title: "ID", Width: calculateWidth(XS, w)},
-		{Title: "Name", Width: calculateWidth(LG, w)},
+		{Title: "ID", Width: calculateWidth(SM, w)},
+		{Title: "Name", Width: calculateWidth(MD, w)},
 		{Title: "Project", Width: calculateWidth(MD, w)},
 		{Title: "Status", Width: calculateWidth(SM, w)},
-		{Title: "Created At", Width: calculateWidth(MD, w)},
+		{Title: "Created At", Width: calculateWidth(SM, w)},
 	}
 	var rows []table.Row
 	for _, task := range tasks {
 		rows = append(rows, table.Row{
-			fmt.Sprintf("%d", task.ID),
+			fmt.Sprintf("%s", task.ID.Hex()),
 			task.Name,
 			task.Project,
 			task.Status,
@@ -194,15 +193,15 @@ func setupTable(tasks []task) table.Model {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
-		table.WithFocused(false),
+		//table.WithFocused(false),
 		table.WithHeight(len(tasks)),
 	)
 	s := table.DefaultStyles()
 	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(false)
+		Border(lipgloss.ThickBorder(), true, false, true, false).
+    Foreground(lipgloss.Color(ff["cyan"])).
+		BorderForeground(lipgloss.Color(ff["yellow"]))
+  s.Selected = s.Selected.Bold(false).Foreground(lipgloss.Color(ff["white"]))
 	t.SetStyles(s)
 	return t
 }
