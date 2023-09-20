@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+  "log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	//"os"
 	//"reflect"
 	"time"
 )
@@ -24,12 +24,12 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	Name      string              `json:"name" bson:"name"`
-  Project   string              `json:"project" bson:"project"`
-  Status    string              `json:"status" bson:"status"`
-  Created   time.Time           `json:"created" bson:"created"`
-	Completed time.Time           `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name      string             `json:"name" bson:"name"`
+	Project   string             `json:"project" bson:"project"`
+	Status    string             `json:"status" bson:"status"`
+	Created   time.Time          `json:"created" bson:"created"`
+	Completed time.Time          `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
 }
 
 // implement list.Item & list.DefaultItem
@@ -62,15 +62,16 @@ func (t *devDB) insertTask(name, project string) error {
 		Status:  todo.String(),
 		Created: time.Now(),
 	}
+
 	result, err := t.db.Database("dev").Collection("tasks").InsertOne(context.TODO(), newTask)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("insert result: %+v", result)
+  log.Printf("insert task: %+v", result)
 
 	t.closeDb()
-	return nil
+	return nil 
 }
 
 /*
@@ -118,38 +119,38 @@ func (orig *task) merge(t task) {
 func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
 
-  var results []bson.M
-  cursor, err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}})
+	var results []bson.M
+	cursor, err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}})
 
-  if err != nil {
-    if err == mongo.ErrNoDocuments {
-      // This error means your query did not match any documents.
-      return tasks, nil
-    }
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// This error means your query did not match any documents.
+			return tasks, nil
+		}
 		return tasks, fmt.Errorf("unable to get values: %w", err)
-  }
+	}
 
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
 
 	for _, result := range results {
-    //cursor.Decode(&result)
-    fmt.Printf("%+v\n", result["name"])
-    var task = task{
-      ID: result["_id"].(primitive.ObjectID),
-      Name: result["name"].(string),
-      Project: result["project"].(string),
-      Status: result["status"].(string),
-      Created: result["created"].(primitive.DateTime).Time(),
-      //Completed: result["completed"].(primitive.DateTime).Time(),
-    }
-		
+		//cursor.Decode(&result)
+		var task = task{
+			ID:      result["_id"].(primitive.ObjectID),
+			Name:    result["name"].(string),
+			Project: result["project"].(string),
+			Status:  result["status"].(string),
+			Created: result["created"].(primitive.DateTime).Time(),
+			//Completed: result["completed"].(primitive.DateTime).Time(),
+		}
+
 		tasks = append(tasks, task)
 	}
-  
+
 	return tasks, err
 }
+
 /*
 func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 	var tasks []task
