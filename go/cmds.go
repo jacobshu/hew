@@ -83,7 +83,7 @@ func taskList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	table := setupTable(tasks)
+	table := createListTable(tasks)
 	fmt.Print(table.View())
 	return nil
 }
@@ -159,22 +159,23 @@ func calculateWidth(min, width int) int {
 }
 
 const (
-	XS int = 1
-	SM int = 3
+	XS int = 3
+	SM int = 4
 	MD int = 5
-	LG int = 10
+	LG int = 6
 )
 
-func setupTable(tasks []task) table.Model {
+func createListTable(tasks []task) table.Model {
 	// get term size
-	w, _, err := term.GetSize(int(os.Stdout.Fd()))
+	w, h, err := term.GetSize(int(os.Stdout.Fd()))
+  log.Printf("terminal size: %+v x %+v", w, h)
 	if err != nil {
 		// we don't really want to fail it...
 		log.Println("unable to calculate height and width of terminal")
 	}
 
 	columns := []table.Column{
-		{Title: "ID", Width: calculateWidth(SM, w)},
+		{Title: "ID", Width: calculateWidth(XS, w)},
 		{Title: "Name", Width: calculateWidth(MD, w)},
 		{Title: "Project", Width: calculateWidth(MD, w)},
 		{Title: "Status", Width: calculateWidth(SM, w)},
