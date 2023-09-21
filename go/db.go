@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	//"reflect"
+	"reflect"
 	"time"
 )
 
@@ -55,6 +55,15 @@ type devDB struct {
 	closeDb func()
 }
 
+func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
+  _id, err := primitive.ObjectIDFromHex(str)
+  if err != nil {
+    log.Printf("error getting object id: %+v", err)
+    return primitive.ObjectIDFromHex("00000000000000000000")
+  }
+  return _id, nil
+}
+
 func (t *devDB) insertTask(name, project string) error {
 	newTask := task{
 		Name:    name,
@@ -79,27 +88,40 @@ func (t *taskDB) delete(id uint) error {
 	_, err := t.db.Exec("DELETE FROM tasks WHERE id = ?", id)
 	return err
 }
+*/
 
 // Update the task in the db. Provide new values for the fields you want to
 // change, keep them empty if unchanged.
-func (t *taskDB) update(task task) error {
-	// Get the existing state of the task we want to update.
-	orig, err := t.getTask(task.ID)
+func (t *devDB) updateTask(strId string, task task) error {
+  id, err := t.ObjectIdFromString(strId)
+  if err != nil {
+    return err
+  }
+
+	orig, err := t.getTask(id)
 	if err != nil {
 		return err
 	}
 	orig.merge(task)
-	_, err = t.db.Exec(
-		"UPDATE tasks SET name = ?, project = ?, status = ? WHERE id = ?",
-		orig.Name,
-		orig.Project,
-		orig.Status,
-		orig.ID)
-	return err
+
+  filter := bson.D{{"_id", orig.ID}}
+  update := bson.D{{"$set", bson.D{
+    {"name", orig.Name}, 
+    {"project", orig.Project}, 
+    {"status", orig.Status},
+  }}}
+  result, err := t.db.Database("dev").Collection("tasks").UpdateOne(context.TODO(), filter, update)
+  if err != nil {
+    return err
+  }
+
+  log.Printf("updated: %+v", result)
+	return nil
 }
 
 // merge the changed fields to the original task
 func (orig *task) merge(t task) {
+  //log.Printf("merging, \n%+v \nwith \n%+v", orig, t)
 	uValues := reflect.ValueOf(&t).Elem()
 	oValues := reflect.ValueOf(orig).Elem()
 	for i := 0; i < uValues.NumField(); i++ {
@@ -114,7 +136,6 @@ func (orig *task) merge(t task) {
 		}
 	}
 }
-*/
 
 func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
@@ -174,17 +195,11 @@ func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 	}
 	return tasks, err
 }
+*/
 
-func (t *taskDB) getTask(id uint) (task, error) {
+
+func (t *devDB) getTask(id primitive.ObjectID) (task, error) {
 	var task task
-	err := t.db.QueryRow("SELECT * FROM tasks WHERE id = ?", id).
-		Scan(
-			&task.ID,
-			&task.Name,
-			&task.Project,
-			&task.Status,
-			&task.Created,
-		)
+  err := t.db.Database("dev").Collection("tasks").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
 	return task, err
 }
-*/

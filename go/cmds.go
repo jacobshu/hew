@@ -101,11 +101,7 @@ func taskUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	id, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	fmt.Printf("%+v", id)
+ 
 	var status string
 	switch prog {
 	case int(inProgress):
@@ -115,9 +111,12 @@ func taskUpdate(cmd *cobra.Command, args []string) error {
 	default:
 		status = todo.String()
 	}
+  
 	newTask := task{Name: name, Project: project, Status: status, Created: time.Time{}}
-	fmt.Printf("%+v", newTask)
-	return nil //TODO: t.update(newTask)
+  if err := devDb.updateTask(args[0], newTask); err != nil {
+    return err
+  }
+	return nil
 }
 
 func taskDelete(cmd *cobra.Command, args []string) error {
@@ -131,7 +130,7 @@ func taskDelete(cmd *cobra.Command, args []string) error {
 
 func calculateWidth(min, width int) int {
 	p := width / 10
-	switch min {
+  switch min {
 	case XS:
 		if p < XS {
 			return XS
@@ -142,7 +141,7 @@ func calculateWidth(min, width int) int {
 		if p < SM {
 			return SM
 		}
-		return p / 2
+		return p
 	case MD:
 		if p < MD {
 			return MD
@@ -159,10 +158,10 @@ func calculateWidth(min, width int) int {
 }
 
 const (
-	XS int = 3
-	SM int = 4
-	MD int = 5
-	LG int = 6
+	XS int = 5
+	SM int = 10
+	MD int = 15
+	LG int = 20
 )
 
 func createListTable(tasks []task) table.Model {
@@ -175,11 +174,11 @@ func createListTable(tasks []task) table.Model {
 	}
 
 	columns := []table.Column{
-		{Title: "ID", Width: calculateWidth(XS, w)},
+		{Title: "ID", Width: 24},
 		{Title: "Name", Width: calculateWidth(MD, w)},
-		{Title: "Project", Width: calculateWidth(MD, w)},
-		{Title: "Status", Width: calculateWidth(SM, w)},
-		{Title: "Created At", Width: calculateWidth(SM, w)},
+		{Title: "Project", Width: calculateWidth(SM, w)},
+		{Title: "Status", Width: calculateWidth(XS, w)},
+		{Title: "Created At", Width: calculateWidth(XS, w)},
 	}
 	var rows []table.Row
 	for _, task := range tasks {
