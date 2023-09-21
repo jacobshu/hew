@@ -83,12 +83,15 @@ func (t *devDB) insertTask(name, project string) error {
 	return nil 
 }
 
-/*
-func (t *taskDB) delete(id uint) error {
-	_, err := t.db.Exec("DELETE FROM tasks WHERE id = ?", id)
+func (t *devDB) deleteTaskById(strId string) error {
+	id, err := t.ObjectIdFromString(strId)
+  if err != nil {
+    return err
+  }
+  result, err := t.db.Database("dev").Collection("tasks").DeleteOne(context.TODO(), bson.D{{"_id", id}})
+  log.Printf("deleted: %+v", result)
 	return err
 }
-*/
 
 // Update the task in the db. Provide new values for the fields you want to
 // change, keep them empty if unchanged.

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"golang.org/x/term"
@@ -120,12 +119,10 @@ func taskUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func taskDelete(cmd *cobra.Command, args []string) error {
-	id, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	fmt.Printf("%+v", id)
-	return nil //TODO: t.delete(uint(id))
+  if err := devDb.deleteTaskById(args[0]); err != nil {
+    return err
+  }
+	return nil
 }
 
 func calculateWidth(min, width int) int {
