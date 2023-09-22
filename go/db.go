@@ -53,6 +53,8 @@ type devDB struct {
 	db      *mongo.Client
 	ctx     context.Context
 	closeDb func()
+  tasks   *mongo.Collection
+  links   *mongo.Collection
 }
 
 func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
@@ -72,7 +74,7 @@ func (t *devDB) insertTask(name, project string) error {
 		Created: time.Now(),
 	}
 
-	result, err := t.db.Database("dev").Collection("tasks").InsertOne(context.TODO(), newTask)
+	result, err := t.tasks.InsertOne(context.TODO(), newTask)
 	if err != nil {
 		return err
 	}
@@ -88,7 +90,7 @@ func (t *devDB) deleteTaskById(strId string) error {
   if err != nil {
     return err
   }
-  result, err := t.db.Database("dev").Collection("tasks").DeleteOne(context.TODO(), bson.D{{"_id", id}})
+  result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{"_id", id}})
   log.Printf("deleted: %+v", result)
 	return err
 }
@@ -113,7 +115,7 @@ func (t *devDB) updateTask(strId string, task task) error {
     {"project", orig.Project}, 
     {"status", orig.Status},
   }}}
-  result, err := t.db.Database("dev").Collection("tasks").UpdateOne(context.TODO(), filter, update)
+  result, err := t.tasks.UpdateOne(context.TODO(), filter, update)
   if err != nil {
     return err
   }
@@ -144,7 +146,7 @@ func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
 
 	var results []bson.M
-	cursor, err := t.db.Database("dev").Collection("tasks").Find(context.TODO(), bson.D{{}})
+	cursor, err := t.tasks.Find(context.TODO(), bson.D{{}})
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -203,6 +205,6 @@ func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 
 func (t *devDB) getTask(id primitive.ObjectID) (task, error) {
 	var task task
-  err := t.db.Database("dev").Collection("tasks").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
+  err := t.tasks.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
 	return task, err
 }

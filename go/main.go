@@ -38,6 +38,8 @@ func openDB() *devDB {
 				panic(err)
 			}
 		},
+    tasks: client.Database("dev").Collection("tasks"),
+    links: client.Database("dev").Collection("links"),
 	}
 	return &t
 }
