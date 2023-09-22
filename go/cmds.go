@@ -15,12 +15,20 @@ import (
 )
 
 func BuildCmdTree() *cobra.Command {
-	var rootCmd = &cobra.Command{
-		Use:   "tasks",
+  var rootCmd = &cobra.Command{
+    Use: "hew",
+    Short: "A handy haversack with tools ready to hand",
+    Args: cobra.NoArgs,
+    RunE: hewRoot,
+  }
+
+	var taskCmd = &cobra.Command{
+		Use:   "task",
 		Short: "A CLI task management tool for ~slaying~ your to do list.",
 		Args:  cobra.NoArgs,
 		RunE:  taskRoot,
 	}
+  rootCmd.AddCommand(taskCmd)
 
 	var addCmd = &cobra.Command{
 		Use:   "add NAME",
@@ -29,7 +37,7 @@ func BuildCmdTree() *cobra.Command {
 		RunE:  taskAdd,
 	}
 	addCmd.Flags().StringP("project", "p", "", "specify a project for your task")
-	rootCmd.AddCommand(addCmd)
+	taskCmd.AddCommand(addCmd)
 
 	var listCmd = &cobra.Command{
 		Use:   "list",
@@ -37,7 +45,7 @@ func BuildCmdTree() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  taskList,
 	}
-	rootCmd.AddCommand(listCmd)
+	taskCmd.AddCommand(listCmd)
 
 	var updateCmd = &cobra.Command{
 		Use:   "update ID",
@@ -48,7 +56,7 @@ func BuildCmdTree() *cobra.Command {
 	updateCmd.Flags().StringP("name", "n", "", "specify a name for your task")
 	updateCmd.Flags().StringP("project", "p", "", "specify a project for your task")
 	updateCmd.Flags().IntP("status", "s", int(todo), "specify a status for your task")
-	rootCmd.AddCommand(updateCmd)
+	taskCmd.AddCommand(updateCmd)
 
 	// task delete command
 	var deleteCmd = &cobra.Command{
@@ -57,13 +65,19 @@ func BuildCmdTree() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  taskDelete,
 	}
-	rootCmd.AddCommand(deleteCmd)
+	taskCmd.AddCommand(deleteCmd)
 
 	return rootCmd
 }
 
+func hewRoot(cmd *cobra.Command, args []string) error {
+  return cmd.Help()
+}
+
 func taskRoot(cmd *cobra.Command, args []string) error {
-	return cmd.Help()
+  // TODO
+  fmt.Printf("run the task manager")
+	return nil
 }
 
 func taskAdd(cmd *cobra.Command, args []string) error {
