@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,26 +14,23 @@ const (
 	edit
 )
 
-type manager struct {
+type model struct {
 	tasks       []task
 	selected    task
   mode        mode 
+  err         error
 }
 
-/*
-func checkServer() tea.Msg {
-	c := &http.Client{Timeout: 10 * time.Second}
-	res, err := c.Get(url)
+func getAllTasks() tea.Msg {
+	result, err := devDb.getTasks()
 	if err != nil {
 		return errMsg{err}
 	}
-  defer res.Body.Close() // nolint:errcheck
 
-	return statusMsg(res.StatusCode)
+	return allTasksMsg(result)
 }
-*/
 
-type statusMsg int
+type allTasksMsg []task
 
 type errMsg struct{ err error }
 
@@ -45,14 +39,14 @@ type errMsg struct{ err error }
 func (e errMsg) Error() string { return e.err.Error() }
 
 func (m model) Init() tea.Cmd {
-  t, _ := getTasks()
-
+  return getAllTasks
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+  m.mode = 0
 	switch msg := msg.(type) {
-	case statusMsg:
-		m.status = int(msg)
+	case allTasksMsg:
+		m.tasks = msg
 		return m, tea.Quit
 
 	case errMsg:
@@ -73,16 +67,9 @@ func (m model) View() string {
 		return fmt.Sprintf("\nWe had some trouble: %v\n\n", m.err)
 	}
 
-	s := fmt.Sprintf("Checking %s ... ", url)
-	if m.status > 0 {
-		s += fmt.Sprintf("%d %s!", m.status, http.StatusText(m.status))
+  s := fmt.Sprintf("Mode: ... ")
+	if len(m.tasks) > 0 {
+		s += fmt.Sprintf("%+v !", m.tasks[0])
 	}
 	return "\n" + s + "\n\n"
-}
-
-func main() {
-	if _, err := tea.NewProgram(model{}).Run(); err != nil {
-		fmt.Printf("Uh oh, there was an error: %v\n", err)
-		os.Exit(1)
-	}
 }

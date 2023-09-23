@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
@@ -75,8 +76,11 @@ func hewRoot(cmd *cobra.Command, args []string) error {
 }
 
 func taskRoot(cmd *cobra.Command, args []string) error {
-  // TODO
-  fmt.Printf("run the task manager")
+  if _, err := tea.NewProgram(model{}).Run(); err != nil {
+		fmt.Printf("Uh oh, there was an error: %v\n", err)
+		os.Exit(1)
+	}
+  //fmt.Printf("run the task manager")
 	return nil
 }
 
