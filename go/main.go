@@ -38,8 +38,8 @@ func openDB() *devDB {
 				panic(err)
 			}
 		},
-    tasks: client.Database("dev").Collection("tasks"),
-    links: client.Database("dev").Collection("links"),
+		tasks: client.Database("dev").Collection("tasks"),
+		links: client.Database("dev").Collection("links"),
 	}
 	return &t
 }
@@ -47,13 +47,13 @@ func openDB() *devDB {
 var devDb = openDB()
 
 func main() {
-  f, err := os.OpenFile("logfile", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-  if err != nil {
-    log.Fatalf("error opening file: %v", err)
-  }
+	f, err := os.OpenFile("logfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
 
-  defer f.Close()
-  log.SetOutput(f)
+	defer f.Close()
+	log.SetOutput(f)
 
 	if err := BuildCmdTree().Execute(); err != nil {
 		fmt.Println(err)

@@ -16,20 +16,20 @@ import (
 )
 
 func BuildCmdTree() *cobra.Command {
-  var rootCmd = &cobra.Command{
-    Use: "hew",
-    Short: "A handy haversack with tools ready to hand",
-    Args: cobra.NoArgs,
-    RunE: hewRoot,
-  }
+	var rootCmd = &cobra.Command{
+		Use:   "hew",
+		Short: "A handy haversack with tools ready to hand",
+		Args:  cobra.NoArgs,
+		RunE:  hewRoot,
+	}
 
 	var taskCmd = &cobra.Command{
 		Use:   "task",
 		Short: "A CLI task management tool for ~slaying~ your to do list.",
 		Args:  cobra.NoArgs,
-		RunE:  taskRoot,
+		Run:   taskRoot,
 	}
-  rootCmd.AddCommand(taskCmd)
+	rootCmd.AddCommand(taskCmd)
 
 	var addCmd = &cobra.Command{
 		Use:   "add NAME",
@@ -72,16 +72,14 @@ func BuildCmdTree() *cobra.Command {
 }
 
 func hewRoot(cmd *cobra.Command, args []string) error {
-  return cmd.Help()
+	return cmd.Help()
 }
 
-func taskRoot(cmd *cobra.Command, args []string) error {
-  if _, err := tea.NewProgram(model{}).Run(); err != nil {
+func taskRoot(cmd *cobra.Command, args []string) {
+	if _, err := tea.NewProgram(model{}).Run(); err != nil {
 		fmt.Printf("Uh oh, there was an error: %v\n", err)
 		os.Exit(1)
 	}
-  //fmt.Printf("run the task manager")
-	return nil
 }
 
 func taskAdd(cmd *cobra.Command, args []string) error {
@@ -118,7 +116,7 @@ func taskUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
- 
+
 	var status string
 	switch prog {
 	case int(inProgress):
@@ -128,24 +126,24 @@ func taskUpdate(cmd *cobra.Command, args []string) error {
 	default:
 		status = todo.String()
 	}
-  
+
 	newTask := task{Name: name, Project: project, Status: status, Created: time.Time{}}
-  if err := devDb.updateTask(args[0], newTask); err != nil {
-    return err
-  }
+	if err := devDb.updateTask(args[0], newTask); err != nil {
+		return err
+	}
 	return nil
 }
 
 func taskDelete(cmd *cobra.Command, args []string) error {
-  if err := devDb.deleteTaskById(args[0]); err != nil {
-    return err
-  }
+	if err := devDb.deleteTaskById(args[0]); err != nil {
+		return err
+	}
 	return nil
 }
 
 func calculateWidth(min, width int) int {
 	p := width / 10
-  switch min {
+	switch min {
 	case XS:
 		if p < XS {
 			return XS
@@ -182,7 +180,7 @@ const (
 func createListTable(tasks []task) table.Model {
 	// get term size
 	w, h, err := term.GetSize(int(os.Stdout.Fd()))
-  log.Printf("terminal size: %+v x %+v", w, h)
+	log.Printf("terminal size: %+v x %+v", w, h)
 	if err != nil {
 		// we don't really want to fail it...
 		log.Println("unable to calculate height and width of terminal")
@@ -214,9 +212,9 @@ func createListTable(tasks []task) table.Model {
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		Border(lipgloss.ThickBorder(), true, false, true, false).
-    Foreground(lipgloss.Color(ff["cyan"])).
+		Foreground(lipgloss.Color(ff["cyan"])).
 		BorderForeground(lipgloss.Color(ff["yellow"]))
-  s.Selected = s.Selected.Bold(false).Foreground(lipgloss.Color(ff["white"]))
+	s.Selected = s.Selected.Bold(false).Foreground(lipgloss.Color(ff["white"]))
 	t.SetStyles(s)
 	return t
 }

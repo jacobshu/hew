@@ -9,16 +9,16 @@ import (
 type mode int
 
 const (
-	view     mode = iota
+	view mode = iota
 	create
 	edit
 )
 
 type model struct {
-	tasks       []task
-	selected    task
-  mode        mode 
-  err         error
+	tasks    []task
+	selected task
+	mode     mode
+	err      error
 }
 
 func getAllTasks() tea.Msg {
@@ -39,22 +39,22 @@ type errMsg struct{ err error }
 func (e errMsg) Error() string { return e.err.Error() }
 
 func (m model) Init() tea.Cmd {
-  return getAllTasks
+	return getAllTasks
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-  m.mode = 0
+	m.mode = 0
 	switch msg := msg.(type) {
 	case allTasksMsg:
 		m.tasks = msg
-		return m, tea.Quit
+		return m, nil
 
 	case errMsg:
 		m.err = msg
 		return m, tea.Quit
 
 	case tea.KeyMsg:
-		if msg.Type == tea.KeyCtrlC {
+		if msg.Type == tea.KeyCtrlC || msg.Type == tea.KeyEsc {
 			return m, tea.Quit
 		}
 	}
@@ -67,7 +67,7 @@ func (m model) View() string {
 		return fmt.Sprintf("\nWe had some trouble: %v\n\n", m.err)
 	}
 
-  s := fmt.Sprintf("Mode: ... ")
+	s := fmt.Sprintf("Mode: ... ")
 	if len(m.tasks) > 0 {
 		s += fmt.Sprintf("%+v !", m.tasks[0])
 	}

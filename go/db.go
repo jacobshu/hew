@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-  "log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"reflect"
 	"time"
 )
@@ -53,17 +53,17 @@ type devDB struct {
 	db      *mongo.Client
 	ctx     context.Context
 	closeDb func()
-  tasks   *mongo.Collection
-  links   *mongo.Collection
+	tasks   *mongo.Collection
+	links   *mongo.Collection
 }
 
 func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
-  _id, err := primitive.ObjectIDFromHex(str)
-  if err != nil {
-    log.Printf("error getting object id: %+v", err)
-    return primitive.ObjectIDFromHex("00000000000000000000")
-  }
-  return _id, nil
+	_id, err := primitive.ObjectIDFromHex(str)
+	if err != nil {
+		log.Printf("error getting object id: %+v", err)
+		return primitive.ObjectIDFromHex("00000000000000000000")
+	}
+	return _id, nil
 }
 
 func (t *devDB) insertTask(name, project string) error {
@@ -79,19 +79,19 @@ func (t *devDB) insertTask(name, project string) error {
 		return err
 	}
 
-  log.Printf("insert task: %+v", result)
+	log.Printf("insert task: %+v", result)
 
 	t.closeDb()
-	return nil 
+	return nil
 }
 
 func (t *devDB) deleteTaskById(strId string) error {
 	id, err := t.ObjectIdFromString(strId)
-  if err != nil {
-    return err
-  }
-  result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{"_id", id}})
-  log.Printf("deleted: %+v", result)
+	if err != nil {
+		return err
+	}
+	result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{"_id", id}})
+	log.Printf("deleted: %+v", result)
 	t.closeDb()
 	return err
 }
@@ -99,10 +99,10 @@ func (t *devDB) deleteTaskById(strId string) error {
 // Update the task in the db. Provide new values for the fields you want to
 // change, keep them empty if unchanged.
 func (t *devDB) updateTask(strId string, task task) error {
-  id, err := t.ObjectIdFromString(strId)
-  if err != nil {
-    return err
-  }
+	id, err := t.ObjectIdFromString(strId)
+	if err != nil {
+		return err
+	}
 
 	orig, err := t.getTask(id)
 	if err != nil {
@@ -110,25 +110,25 @@ func (t *devDB) updateTask(strId string, task task) error {
 	}
 	orig.merge(task)
 
-  filter := bson.D{{"_id", orig.ID}}
-  update := bson.D{{"$set", bson.D{
-    {"name", orig.Name}, 
-    {"project", orig.Project}, 
-    {"status", orig.Status},
-  }}}
-  result, err := t.tasks.UpdateOne(context.TODO(), filter, update)
-  if err != nil {
-    return err
-  }
+	filter := bson.D{{"_id", orig.ID}}
+	update := bson.D{{"$set", bson.D{
+		{"name", orig.Name},
+		{"project", orig.Project},
+		{"status", orig.Status},
+	}}}
+	result, err := t.tasks.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
 
-  log.Printf("updated: %+v", result)
+	log.Printf("updated: %+v", result)
 	t.closeDb()
 	return nil
 }
 
 // merge the changed fields to the original task
 func (orig *task) merge(t task) {
-  //log.Printf("merging, \n%+v \nwith \n%+v", orig, t)
+	//log.Printf("merging, \n%+v \nwith \n%+v", orig, t)
 	uValues := reflect.ValueOf(&t).Elem()
 	oValues := reflect.ValueOf(orig).Elem()
 	for i := 0; i < uValues.NumField(); i++ {
@@ -205,9 +205,8 @@ func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 }
 */
 
-
 func (t *devDB) getTask(id primitive.ObjectID) (task, error) {
 	var task task
-  err := t.tasks.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
+	err := t.tasks.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
 	return task, err
 }
