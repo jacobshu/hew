@@ -92,6 +92,7 @@ func (t *devDB) deleteTaskById(strId string) error {
   }
   result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{"_id", id}})
   log.Printf("deleted: %+v", result)
+	t.closeDb()
 	return err
 }
 
@@ -121,6 +122,7 @@ func (t *devDB) updateTask(strId string, task task) error {
   }
 
   log.Printf("updated: %+v", result)
+	t.closeDb()
 	return nil
 }
 
@@ -174,6 +176,7 @@ func (t *devDB) getTasks() ([]task, error) {
 		tasks = append(tasks, task)
 	}
 
+	t.closeDb()
 	return tasks, err
 }
 
