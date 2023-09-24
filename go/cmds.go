@@ -76,7 +76,12 @@ func hewRoot(cmd *cobra.Command, args []string) error {
 }
 
 func taskRoot(cmd *cobra.Command, args []string) {
-	if _, err := tea.NewProgram(model{}).Run(); err != nil {
+	p := tea.NewProgram(
+		model{content: string("Testing the viewport with a string")},
+		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
+		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
+	)
+	if _, err := p.Run(); err != nil {
 		fmt.Printf("Uh oh, there was an error: %v\n", err)
 		os.Exit(1)
 	}
