@@ -68,6 +68,14 @@ func BuildCmdTree() *cobra.Command {
 	}
 	taskCmd.AddCommand(deleteCmd)
 
+  var chtCmd = &cobra.Command{
+    Use: "cht",
+    Short: "Get help from cht.sh",
+    Args: cobra.NoArgs,
+    Run: chtRoot,
+  }
+  rootCmd.AddCommand(chtCmd)
+
 	return rootCmd
 }
 
@@ -173,6 +181,10 @@ func calculateWidth(min, width int) int {
 	default:
 		return p
 	}
+}
+
+func chtRoot(cmd *cobra.Command, args []string) {
+  fmt.Printf("call the cht")
 }
 
 const (
