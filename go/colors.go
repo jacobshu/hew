@@ -1,21 +1,23 @@
 package main
 
-var ff = map[string]string{
-	"bg":            "#283038",
-	"black":         "#374149",
-	"red":           "#da7280",
-	"green":         "#a8c180",
-	"yellow":        "#dbba79",
-	"blue":          "#78b1bd",
-	"magenta":       "#d491b5",
-	"cyan":          "#7bc29a",
-	"white":         "#d0c9a1",
-	"brightBlack":   "#526564",
-	"brightRed":     "#da7280",
-	"brightGreen":   "#a8c180",
-	"brightYellow":  "#dbba79",
-	"brightBlue":    "#78b1bd",
-	"brightMagenta": "#d491b5",
-	"brightCyan":    "#7bc29a",
-	"brightWhite":   "#f8f7f2",
+import "github.com/charmbracelet/lipgloss"
+
+var forestfox = map[string]lipgloss.Style{
+	"bg":            lipgloss.Color("#283038"),
+	"black":         lipgloss.Color("#374149"),
+	"red":           lipgloss.Color("#da7280"),
+	"green":         lipgloss.Color("#a8c180"),
+	"yellow":        lipgloss.Color("#dbba79"),
+	"blue":          lipgloss.Color("#78b1bd"),
+	"magenta":       lipgloss.Color("#d491b5"),
+	"cyan":          lipgloss.Color("#7bc29a"),
+	"white":         lipgloss.Color("#d0c9a1"),
+	"brightBlack":   lipgloss.Color("#526564"),
+	"brightRed":     lipgloss.Color("#da7280"),
+	"brightGreen":   lipgloss.Color("#a8c180"),
+	"brightYellow":  lipgloss.Color("#dbba79"),
+	"brightBlue":    lipgloss.Color("#78b1bd"),
+	"brightMagenta": lipgloss.Color("#d491b5"),
+	"brightCyan":    lipgloss.Color("#7bc29a"),
+	"brightWhite":   lipgloss.Color("#f8f7f2"),
 }

@@ -34,11 +34,11 @@ var (
 		b := lipgloss.BlockBorder()
 		//b.Right = "├"
 		return lipgloss.NewStyle().BorderStyle(b).
-			BorderForeground(lipgloss.Color(ff["cyan"])).
-			//BorderBackground(lipgloss.Color(ff["black"])).
+			BorderForeground(forestfox["cyan"]).
+			//BorderBackground(forestfox["black"]).
 			Padding(0, 1).
-			Background(lipgloss.Color(ff["cyan"])).
-			Foreground(lipgloss.Color(ff["black"]))
+			Background(forestfox["cyan"]).
+			Foreground(forestfox["black"])
 	}()
 
 	infoStyle = func() lipgloss.Style {

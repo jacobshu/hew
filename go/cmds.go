@@ -237,9 +237,9 @@ func createListTable(tasks []task) table.Model {
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		Border(lipgloss.ThickBorder(), true, false, true, false).
-		Foreground(lipgloss.Color(ff["cyan"])).
-		BorderForeground(lipgloss.Color(ff["yellow"]))
-	s.Selected = s.Selected.Bold(false).Foreground(lipgloss.Color(ff["white"]))
+		Foreground(forestfox["cyan"]).
+		BorderForeground(forestfox["yellow"])
+	s.Selected = s.Selected.Bold(false).Foreground(forestfox["white"])
 	t.SetStyles(s)
 	return t
 }
