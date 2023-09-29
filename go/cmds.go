@@ -68,13 +68,13 @@ func BuildCmdTree() *cobra.Command {
 	}
 	taskCmd.AddCommand(deleteCmd)
 
-  var chtCmd = &cobra.Command{
-    Use: "cht",
-    Short: "Get help from cht.sh",
-    Args: cobra.NoArgs,
-    Run: chtRoot,
-  }
-  rootCmd.AddCommand(chtCmd)
+	var chtCmd = &cobra.Command{
+		Use:   "cht",
+		Short: "Get help from cht.sh",
+		Args:  cobra.NoArgs,
+		Run:   chtRoot,
+	}
+	rootCmd.AddCommand(chtCmd)
 
 	return rootCmd
 }
@@ -85,7 +85,7 @@ func hewRoot(cmd *cobra.Command, args []string) error {
 
 func taskRoot(cmd *cobra.Command, args []string) {
 	p := tea.NewProgram(
-		model{content: string("Testing the viewport with a string")},
+		taskModel{content: string("Testing the viewport with a string")},
 		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
 		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
 	)
@@ -154,6 +154,18 @@ func taskDelete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func chtRoot(cmd *cobra.Command, args []string) {
+	p := tea.NewProgram(
+		chtModel{query: string("Testing the viewport with a string")},
+		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
+		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
+	)
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Uh oh, there was an error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func calculateWidth(min, width int) int {
 	p := width / 10
 	switch min {
@@ -181,10 +193,6 @@ func calculateWidth(min, width int) int {
 	default:
 		return p
 	}
-}
-
-func chtRoot(cmd *cobra.Command, args []string) {
-  fmt.Printf("call the cht")
 }
 
 const (

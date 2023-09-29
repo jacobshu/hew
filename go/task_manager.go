@@ -19,7 +19,7 @@ const (
 	edit
 )
 
-type model struct {
+type taskModel struct {
 	ready    bool
 	viewport viewport.Model
 	tasks    []task
@@ -65,11 +65,11 @@ type errMsg struct{ err error }
 // error interface on the message.
 func (e errMsg) Error() string { return e.err.Error() }
 
-func (m model) Init() tea.Cmd {
+func (m taskModel) Init() tea.Cmd {
 	return getAllTasks
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m taskModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -132,7 +132,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m taskModel) View() string {
 	if m.err != nil {
 		return fmt.Sprintf("\nWe had some trouble: %v\n\n", m.err)
 	}
@@ -143,14 +143,14 @@ func (m model) View() string {
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
 }
 
-func (m model) headerView() string {
+func (m taskModel) headerView() string {
 	title := titleStyle.Render("Haversack")
 	lineLeft := strings.Repeat("─", 5)
 	lineRight := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, lineLeft, title, lineRight)
 }
 
-func (m model) footerView() string {
+func (m taskModel) footerView() string {
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
