@@ -156,7 +156,7 @@ func taskDelete(cmd *cobra.Command, args []string) error {
 
 func chtRoot(cmd *cobra.Command, args []string) {
 	p := tea.NewProgram(
-		chtModel{query: string("Testing the viewport with a string")},
+		initialChtModel(),
 		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
 		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
 	)
