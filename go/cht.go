@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+  "io/ioutil"
+  "log"
 	"net/http"
+  "strings"
 
   "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
-	//"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -15,19 +18,28 @@ const (
 	query
 )
 
+var (
+	inputStyle    = lipgloss.NewStyle().Foreground(forestfox["magenta"])
+	continueStyle = lipgloss.NewStyle().Foreground(forestfox["black"])
+  continueFocusStyle = lipgloss.NewStyle().
+    //Padding(1).
+    Foreground(forestfox["cyan"]).
+    Background(forestfox["brightBlack"])
+)
+
 type chtModel struct {
 	inputs   []textinput.Model
   focused  int
   err      error
-	query    string
-	request  string
-	response http.Response
+	response string
 }
+
+type chtshMsg string
 
 func initialChtModel() chtModel {
   var inputs []textinput.Model = make([]textinput.Model, 2)
 	inputs[language] = textinput.New()
-	inputs[language].Placeholder = "language"
+	inputs[language].Placeholder = "go "
 	inputs[language].Focus()
 	inputs[language].CharLimit = 44
 	inputs[language].Width = 50
@@ -35,7 +47,7 @@ func initialChtModel() chtModel {
 	//inputs[language].Validate = ccnValidator
 
 	inputs[query] = textinput.New()
-	inputs[query].Placeholder = "query "
+	inputs[query].Placeholder = "slices  "
 	inputs[query].CharLimit = 100
 	inputs[query].Width = 50
 	inputs[query].Prompt = ""
@@ -59,8 +71,8 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			if m.focused == len(m.inputs)-1 {
-				return m, tea.Quit
+			if m.focused == len(m.inputs) {
+				return m, getChtsh(m.inputs[0].Value(), m.inputs[1].Value())
 			}
 			m.nextInput()
 		case tea.KeyCtrlC, tea.KeyEsc:
@@ -69,11 +81,15 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.prevInput()
 		case tea.KeyTab, tea.KeyCtrlN:
 			m.nextInput()
+    case chtshMsg:
+      m.response = msg
 		}
 		for i := range m.inputs {
 			m.inputs[i].Blur()
 		}
-		m.inputs[m.focused].Focus()
+    if m.focused <= len(m.inputs) -1  {
+      m.inputs[m.focused].Focus()
+    }
 
 	// We handle errors just like any other message
 	case errMsg:
@@ -88,13 +104,39 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m chtModel) View() string {
-	out, err := glamour.Render("", "dark")
-	return fmt.Sprintf("")
+	_, err := glamour.Render("# testing \n >glamour\n\n## Headlines", "dark")
+  if err != nil {
+    return fmt.Sprintf("error rendering with glamour: %+v", err)
+  }
+
+  var buttonStyle lipgloss.Style
+  if m.focused == len(m.inputs) {
+    buttonStyle = continueFocusStyle
+  } else {
+    buttonStyle = continueStyle
+  }
+
+  result := fmt.Sprintf(`
+ %s
+ %s
+
+ %s
+ %s
+
+ %s
+`,
+		inputStyle.Width(30).Render("Language"),
+		m.inputs[language].View(),
+		inputStyle.Width(10).Render("Query"),
+		m.inputs[query].View(),
+		buttonStyle.Render("Continue ->"),
+	) + "\n"
+	return result
 }
 
 // nextInput focuses the next input field
 func (m *chtModel) nextInput() {
-	m.focused = (m.focused + 1) % len(m.inputs)
+	m.focused = (m.focused + 1) % (len(m.inputs) + 1)
 }
 
 // prevInput focuses the previous input field
@@ -102,6 +144,30 @@ func (m *chtModel) prevInput() {
 	m.focused--
 	// Wrap around
 	if m.focused < 0 {
-		m.focused = len(m.inputs) - 1
+    // don't need to subtract one to account for 0-index since we focus the
+    // submit line too
+		m.focused = len(m.inputs)// - 1
 	}
 }
+
+func getChtsh(language string, query string) tea.Cmd {
+	return func() tea.Msg {
+	 q := strings.Replace(query, " ", "+", -1)
+   req := fmt.Sprintf("cht.sh/%s/%s", language, q)
+   resp, err := http.Get(req)
+   if err != nil {
+      log.Fatalln(err)
+   }
+   
+   body, err := ioutil.ReadAll(resp.Body)
+   if err != nil {
+      log.Fatalln(err)
+   }
+   
+   defer resp.Body.Close()
+   return chtshMsg(string(body))
+  }
+}
+
+
+  
