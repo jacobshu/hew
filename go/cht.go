@@ -34,7 +34,13 @@ type chtModel struct {
 	response string
 }
 
-type chtshMsg string
+type (
+  chtshMsg string
+)
+
+func (c chtshMsg) String() string {
+    return fmt.Sprintf("%s", c)
+}
 
 func initialChtModel() chtModel {
   var inputs []textinput.Model = make([]textinput.Model, 2)
@@ -81,16 +87,18 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.prevInput()
 		case tea.KeyTab, tea.KeyCtrlN:
 			m.nextInput()
-    case chtshMsg:
-      m.response = msg
-		}
+    }
+
 		for i := range m.inputs {
 			m.inputs[i].Blur()
 		}
     if m.focused <= len(m.inputs) -1  {
       m.inputs[m.focused].Focus()
     }
-
+  case chtshMsg:
+    m.response = msg.String()
+    log.Printf("msg: %s, m: %+v", msg.String(), m)
+    return m, nil
 	// We handle errors just like any other message
 	case errMsg:
 		m.err = msg
@@ -116,7 +124,7 @@ func (m chtModel) View() string {
     buttonStyle = continueStyle
   }
 
-  result := fmt.Sprintf(`
+  return fmt.Sprintf(`
  %s
  %s
 
@@ -131,7 +139,6 @@ func (m chtModel) View() string {
 		m.inputs[query].View(),
 		buttonStyle.Render("Continue ->"),
 	) + "\n"
-	return result
 }
 
 // nextInput focuses the next input field
@@ -153,18 +160,19 @@ func (m *chtModel) prevInput() {
 func getChtsh(language string, query string) tea.Cmd {
 	return func() tea.Msg {
 	 q := strings.Replace(query, " ", "+", -1)
-   req := fmt.Sprintf("cht.sh/%s/%s", language, q)
+   req := fmt.Sprintf("https://cht.sh/%s/%s", language, q)
+   log.Printf("req: %+v", req)
    resp, err := http.Get(req)
    if err != nil {
-      log.Fatalln(err)
+      log.Printf("%+v", err)
    }
    
    body, err := ioutil.ReadAll(resp.Body)
    if err != nil {
-      log.Fatalln(err)
+      log.Printf("%+v", err)
    }
    
-   defer resp.Body.Close()
+   //defer resp.Body.Close()
    return chtshMsg(string(body))
   }
 }
