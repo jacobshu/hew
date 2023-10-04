@@ -9,7 +9,6 @@ import (
 
   "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -39,7 +38,7 @@ type (
 )
 
 func (c chtshMsg) String() string {
-    return fmt.Sprintf("%s", c)
+    return fmt.Sprintf("%s", string(c))
 }
 
 func initialChtModel() chtModel {
@@ -112,12 +111,7 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m chtModel) View() string {
-	_, err := glamour.Render("# testing \n >glamour\n\n## Headlines", "dark")
-  if err != nil {
-    return fmt.Sprintf("error rendering with glamour: %+v", err)
-  }
-
-  var buttonStyle lipgloss.Style
+	var buttonStyle lipgloss.Style
   if m.focused == len(m.inputs) {
     buttonStyle = continueFocusStyle
   } else {
@@ -132,12 +126,14 @@ func (m chtModel) View() string {
  %s
 
  %s
+ %s
 `,
 		inputStyle.Width(30).Render("Language"),
 		m.inputs[language].View(),
 		inputStyle.Width(10).Render("Query"),
 		m.inputs[query].View(),
 		buttonStyle.Render("Continue ->"),
+    m.response,
 	) + "\n"
 }
 
@@ -160,19 +156,27 @@ func (m *chtModel) prevInput() {
 func getChtsh(language string, query string) tea.Cmd {
 	return func() tea.Msg {
 	 q := strings.Replace(query, " ", "+", -1)
-   req := fmt.Sprintf("https://cht.sh/%s/%s", language, q)
-   log.Printf("req: %+v", req)
-   resp, err := http.Get(req)
+   url := fmt.Sprintf("https://cht.sh/%s/%s", language, q)
+
+   req, err := http.NewRequest("GET", url, nil)
+   if err != nil {
+     return errMsg{err}
+   }
+
+   req.Header.Set("User-Agent", "curl")
+
+   client := &http.Client{}
+   resp, err := client.Do(req)
    if err != nil {
       log.Printf("%+v", err)
    }
-   
+   defer resp.Body.Close()
+
    body, err := ioutil.ReadAll(resp.Body)
    if err != nil {
       log.Printf("%+v", err)
    }
    
-   //defer resp.Body.Close()
    return chtshMsg(string(body))
   }
 }
