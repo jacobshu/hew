@@ -19,11 +19,8 @@ const (
 
 var (
 	inputStyle    = lipgloss.NewStyle().Foreground(forestfox["magenta"])
-	continueStyle = lipgloss.NewStyle().Foreground(forestfox["black"])
-  continueFocusStyle = lipgloss.NewStyle().
-    //Padding(1).
-    Foreground(forestfox["cyan"]).
-    Background(forestfox["brightBlack"])
+	continueStyle = lipgloss.NewStyle().Foreground(forestfox["brightBlack"])
+  continueFocusStyle = lipgloss.NewStyle().Foreground(forestfox["cyan"])
 )
 
 type chtModel struct {
@@ -119,16 +116,14 @@ func (m chtModel) View() string {
   }
 
   return fmt.Sprintf(`
- %s
- %s
+ %s %s
 
- %s
- %s
+ %s %s
 
  %s
  %s
 `,
-		inputStyle.Width(30).Render("Language"),
+		inputStyle.Width(10).Render("Language"),
 		m.inputs[language].View(),
 		inputStyle.Width(10).Render("Query"),
 		m.inputs[query].View(),
