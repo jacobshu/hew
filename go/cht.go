@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-  "io/ioutil"
+  "io"
   "log"
 	"net/http"
   "strings"
 
   "github.com/charmbracelet/bubbles/textinput"
+  "github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -28,6 +29,9 @@ type chtModel struct {
   focused  int
   err      error
 	response string
+  viewport  viewport.Model
+  content   string
+  ready     bool
 }
 
 type (
@@ -46,19 +50,18 @@ func initialChtModel() chtModel {
 	inputs[language].CharLimit = 44
 	inputs[language].Width = 50
 	inputs[language].Prompt = ""
-	//inputs[language].Validate = ccnValidator
 
 	inputs[query] = textinput.New()
 	inputs[query].Placeholder = "slices  "
 	inputs[query].CharLimit = 100
 	inputs[query].Width = 50
 	inputs[query].Prompt = ""
-	//inputs[query].Validate = expValidator
 
-	return chtModel{
+  return chtModel{
 		inputs:  inputs,
 		focused: 0,
 		err:     nil,
+    ready:    false,
 	}
 }
 
@@ -68,7 +71,10 @@ func (m chtModel) Init() tea.Cmd {
 
 func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd = make([]tea.Cmd, len(m.inputs))
-
+  var (
+    cmd tea.Cmd
+    //cmds  []tea.Cmd
+  )
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -92,10 +98,40 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       m.inputs[m.focused].Focus()
     }
   case chtshMsg:
-    m.response = msg.String()
-    log.Printf("msg: %s, m: %+v", msg.String(), m)
-    return m, nil
-	// We handle errors just like any other message
+    m.content = msg.String()
+    m.viewport, cmd = m.viewport.Update(msg)
+    log.Printf("chtshMsg: %+v", len(msg))
+    //m.response = msg.String()
+    return m, cmd
+  
+  case tea.WindowSizeMsg:
+    log.Print("window resize message")
+		headerHeight := 8
+		//verticalMarginHeight := 8
+
+		if !m.ready {
+      vp := viewport.New(40, 20)
+      vp.Style = lipgloss.NewStyle().
+        Width(40).
+        Height(20).
+        BorderStyle(lipgloss.RoundedBorder()).
+        BorderForeground(forestfox["blue"]).
+        PaddingRight(2)
+
+
+      m.viewport = vp
+			m.viewport.YPosition = headerHeight
+			m.viewport.HighPerformanceRendering = useHighPerformanceRenderer
+			m.viewport.SetContent(m.content)
+			m.ready = true
+
+			// This is only necessary for high performance rendering
+			m.viewport.YPosition = headerHeight + 1
+		} 
+    if useHighPerformanceRenderer {
+			// This is needed for high-performance rendering only.
+			cmds = append(cmds, viewport.Sync(m.viewport))
+		}
 	case errMsg:
 		m.err = msg
 		return m, nil
@@ -104,10 +140,19 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	for i := range m.inputs {
 		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
 	}
+
+  // Handle keyboard and mouse events in the viewport
+	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m chtModel) View() string {
+  log.Printf("frame size: %+v\nstyle w: %+v\nviewport w: %+v", 
+    m.viewport.Style.GetHorizontalFrameSize(),
+    m.viewport.Style.GetWidth(),
+    m.viewport.Width)
 	var buttonStyle lipgloss.Style
   if m.focused == len(m.inputs) {
     buttonStyle = continueFocusStyle
@@ -121,14 +166,13 @@ func (m chtModel) View() string {
  %s %s
 
  %s
- %s
-`,
+%s`,
 		inputStyle.Width(10).Render("Language"),
 		m.inputs[language].View(),
 		inputStyle.Width(10).Render("Query"),
 		m.inputs[query].View(),
 		buttonStyle.Render("Continue ->"),
-    m.response,
+    m.viewport.View(),
 	) + "\n"
 }
 
@@ -167,7 +211,7 @@ func getChtsh(language string, query string) tea.Cmd {
    }
    defer resp.Body.Close()
 
-   body, err := ioutil.ReadAll(resp.Body)
+   body, err := io.ReadAll(resp.Body)
    if err != nil {
       log.Printf("%+v", err)
    }
