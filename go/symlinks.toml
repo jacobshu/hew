@@ -1,0 +1,38 @@
+# symlinks for various dotfiles
+# the target paths are all relative to the HOME directory
+version = "1.0"
+
+[[dotfiles]]
+source = "../config/nightfox.yaml"
+target = ".warp/themes/nightfox.yaml"
+isFile = true
+
+[[dotfiles]]
+source = "../config/forestfox.yaml"
+target = ".warp/themes/forestfox.yaml"
+isFile = true
+
+[[dotfiles]]
+source = "../config/nord.yaml"
+target = ".warp/themes/nord.yaml"
+isFile = true
+
+[[dotfiles]]
+source = "../config/starship.toml"
+target = ".config/starship.toml"
+isFile = true
+
+[[dotfiles]]
+source = "../config/.zshrc"
+target = ".zshrc"
+isFile = true
+
+[[dotfiles]]
+source = "../nvim"
+target = ".config/nvim"
+isFile = false
+
+[[dotfiles]]
+source = "../config/typioca.conf"
+target = "./Library/Application Support/typioca/typioca.conf"
+isFile = true
