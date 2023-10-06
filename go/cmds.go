@@ -76,6 +76,15 @@ func BuildCmdTree() *cobra.Command {
 	}
 	rootCmd.AddCommand(chtCmd)
 
+  var loadCmd = &cobra.Command{
+		Use:   "load",
+		Short: "Configure your system for maximum awesomeness",
+		Args:  cobra.NoArgs,
+		Run:   loadRoot,
+	}
+	rootCmd.AddCommand(taskCmd)
+
+
 	return rootCmd
 }
 
@@ -160,6 +169,14 @@ func chtRoot(cmd *cobra.Command, args []string) {
 		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
 		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
 	)
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Uh oh, there was an error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func loadRoot(cmd *cobra.Command, args []string) {
+	p := tea.NewProgram()
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Uh oh, there was an error: %v\n", err)
 		os.Exit(1)
