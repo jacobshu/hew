@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+  "math/rand"
 	"os"
 	"time"
 
@@ -82,7 +83,7 @@ func BuildCmdTree() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run:   loadRoot,
 	}
-	rootCmd.AddCommand(taskCmd)
+	rootCmd.AddCommand(loadCmd)
 
 
 	return rootCmd
@@ -176,9 +177,23 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func loadRoot(cmd *cobra.Command, args []string) {
-	p := tea.NewProgram()
+	p := tea.NewProgram(newLoadModel())
+
+	// Simulate activity
+	go func() {
+		for {
+			pause := time.Duration(rand.Int63n(899)+100) * time.Millisecond // nolint:gosec
+			time.Sleep(pause)
+
+			// Send the Bubble Tea program a message from outside the
+			// tea.Program. This will block until it is ready to receive
+			// messages.
+			p.Send(symlinkMsg{src: "", duration: pause})
+		}
+	}()
+
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Uh oh, there was an error: %v\n", err)
+		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }

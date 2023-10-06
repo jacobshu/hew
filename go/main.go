@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+  _ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+//go:embed symlinks.toml
+var symlinksToml string
 
 func openDB() *devDB {
 	if err := godotenv.Load(); err != nil {
