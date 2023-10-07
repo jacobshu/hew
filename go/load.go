@@ -17,7 +17,7 @@ import (
 type symlink struct {
   Source string 
   Target string
-  IsFile string
+  IsFile bool
 }
 
 type symlinkConfig struct {
@@ -35,7 +35,7 @@ var (
 
 type symlinkMsg struct {
 	duration time.Duration
-	src      string
+	source   string
 	target   string
 	err      error
 }
@@ -44,29 +44,29 @@ func (s symlinkMsg) String() string {
 	if s.duration == 0 {
 		return dotStyle.Render(strings.Repeat(".", 30))
 	}
-	return fmt.Sprintf("💾 Linked %s to %s in %s", s.src, s.target,
+	return fmt.Sprintf("💾 Linked %s to %s in %s", s.source, s.target,
 		durationStyle.Render(s.duration.String()))
 }
 
 type loadModel struct {
 	spinner  spinner.Model
-	symlinks []symlinkMsg
+	symlinksToCreate []symlinkMsg
 	quitting bool
 }
 
-func newLoadModel() loadModel {
-	const numLastResults = 5
+func newLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 	s := spinner.New()
 	s.Style = spinnerStyle
   s.Spinner = spinner.Points
 	return loadModel{
 		spinner:  s,
-		symlinks: make([]symlinkMsg, numLastResults),
+    symlinksToCreate: symlinksToCreate,
 	}
 }
 
 func (m loadModel) Init() tea.Cmd {
-	m.readConfig()
+	readSymlinkConfig()
+  log.Printf("%+v", m.symlinksToCreate) 
 	return m.spinner.Tick
 }
 
@@ -76,11 +76,12 @@ func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.quitting = true
 		return m, tea.Quit
 	case symlinkMsg:
-		m.symlinks = append(m.symlinks[1:], msg)
+		m.symlinksToCreate = append(m.symlinksToCreate[1:], msg)
 		return m, nil
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
+    
 		return m, cmd
 	default:
 		return m, nil
@@ -98,7 +99,8 @@ func (m loadModel) View() string {
 
 	s += "\n\n"
 
-	for _, res := range m.symlinks {
+	for _, res := range m.symlinksToCreate {
+    //log.Printf("%+v => %+v", res.source, res.target)
 		s += res.String() + "\n"
 	}
 
@@ -113,14 +115,25 @@ func (m loadModel) View() string {
 	return appStyle.Render(s)
 }
 
-func (*loadModel) readConfig() {
+func readSymlinkConfig() []symlinkMsg {
 	var conf symlinkConfig
-	md, err := toml.Decode(symlinksToml, &conf)
-  log.Printf("%+v", md.Undecoded())
-	log.Printf("links: %+v", conf)
+  _, err := toml.Decode(symlinksToml, &conf)
 
-	if err != nil {
+  var s []symlinkMsg
+  for _, l := range conf.Dotfiles {
+    log.Printf("dotfile: %+v", l)
+    n := symlinkMsg{source: l.Source, target: l.Target}
+    s = append(s, n) 
+  }
+
+  if err != nil {
 		log.Printf("error reading toml: %+v", err)
 	}
+
+  return s
+  //log.Printf("read: %+v", s)
 }
 
+func (m *loadModel) nextSymlink() tea.Msg {
+  return m.symlinksToCreate[0]
+}

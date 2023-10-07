@@ -177,7 +177,8 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func loadRoot(cmd *cobra.Command, args []string) {
-	p := tea.NewProgram(newLoadModel())
+  symlinksToCreate := readSymlinkConfig()
+	p := tea.NewProgram(newLoadModel(symlinksToCreate))
 
 	// Simulate activity
 	go func() {
@@ -188,7 +189,7 @@ func loadRoot(cmd *cobra.Command, args []string) {
 			// Send the Bubble Tea program a message from outside the
 			// tea.Program. This will block until it is ready to receive
 			// messages.
-			p.Send(symlinkMsg{src: "", duration: pause})
+			p.Send(symlinkMsg{source: "", duration: pause})
 		}
 	}()
 
