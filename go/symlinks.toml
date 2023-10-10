@@ -6,6 +6,7 @@ version = "1.0"
 source = "../config/nightfox.yaml"
 target = ".warp/themes/nightfox.yaml"
 isFile = true
+
 [[dotfiles]]
 source = "../config/forestfox.yaml"
 target = ".warp/themes/forestfox.yaml"

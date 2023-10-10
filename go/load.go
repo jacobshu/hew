@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-
+  "math/rand"
 	//"os"
 	"strings"
 	"time"
@@ -27,7 +27,7 @@ type symlinkConfig struct {
 
 var (
 	spinnerStyle  = lipgloss.NewStyle().Foreground(forestfox["cyan"])
-	helpStyle     = lipgloss.NewStyle().Foreground(forestfox["black"]).Margin(1, 0)
+	helpStyle     = lipgloss.NewStyle().Foreground(forestfox["green"]).Margin(1, 0)
 	dotStyle      = helpStyle.Copy().UnsetMargins()
 	durationStyle = dotStyle.Copy()
 	appStyle      = lipgloss.NewStyle().Margin(1, 2, 0, 2)
@@ -44,13 +44,14 @@ func (s symlinkMsg) String() string {
 	if s.duration == 0 {
 		return dotStyle.Render(strings.Repeat(".", 30))
 	}
-	return fmt.Sprintf("💾 Linked %s to %s in %s", s.source, s.target,
+	return fmt.Sprintf("🔗 Linked %s to %s in %s", s.source, s.target,
 		durationStyle.Render(s.duration.String()))
 }
 
 type loadModel struct {
 	spinner  spinner.Model
 	symlinksToCreate []symlinkMsg
+  symlinksCreated  int 
 	quitting bool
 }
 
@@ -61,6 +62,7 @@ func newLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 	return loadModel{
 		spinner:  s,
     symlinksToCreate: symlinksToCreate,
+    symlinksCreated: 0,
 	}
 }
 
@@ -76,14 +78,21 @@ func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.quitting = true
 		return m, tea.Quit
 	case symlinkMsg:
+    m.symlinksCreated += 1
 		m.symlinksToCreate = append(m.symlinksToCreate[1:], msg)
-		return m, nil
+    if m.symlinksCreated == len(m.symlinksToCreate) {
+      return m, tea.Quit
+    }
+		return m, m.createSymlink
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
     
 		return m, cmd
 	default:
+    if m.symlinksCreated == 0 {
+      return m, m.createSymlink
+    }
 		return m, nil
 	}
 }
@@ -92,7 +101,7 @@ func (m loadModel) View() string {
 	var s string
 
 	if m.quitting {
-		s += "That’s all for today!"
+		s += "Symlinked and loaded"
 	} else {
 		s += m.spinner.View() + " Linking..."
 	}
@@ -132,6 +141,15 @@ func readSymlinkConfig() []symlinkMsg {
 
   return s
   //log.Printf("read: %+v", s)
+}
+func (m *loadModel) createSymlink() tea.Msg {
+  pause := time.Duration(rand.Int63n(899)+100) * time.Millisecond // nolint:gosecA
+  time.Sleep(pause)
+  msg := m.symlinksToCreate[0]
+  m.symlinksToCreate = m.symlinksToCreate[1:]
+  msg.duration = pause
+  log.Printf("linking: %+v to %+v in %+v,  total: %+v", msg.source, msg.target, msg.duration, m.symlinksCreated)
+  return msg
 }
 
 func (m *loadModel) nextSymlink() tea.Msg {
