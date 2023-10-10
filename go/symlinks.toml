@@ -3,36 +3,36 @@
 version = "1.0"
 
 [[dotfiles]]
-source = "../config/nightfox.yaml"
+source = "dev/dotfiles/config/nightfox.yaml"
 target = ".warp/themes/nightfox.yaml"
 isFile = true
 
 [[dotfiles]]
-source = "../config/forestfox.yaml"
+source = "dev/dotfiles/config/forestfox.yaml"
 target = ".warp/themes/forestfox.yaml"
 isFile = true
 
 [[dotfiles]]
-source = "../config/nord.yaml"
+source = "dev/dotfiles/config/nord.yaml"
 target = ".warp/themes/nord.yaml"
 isFile = true
 
 [[dotfiles]]
-source = "../config/starship.toml"
+source = "dev/dotfiles/config/starship.toml"
 target = ".config/starship.toml"
 isFile = true
 
 [[dotfiles]]
-source = "../config/.zshrc"
+source = "dev/dotfiles/config/.zshrc"
 target = ".zshrc"
 isFile = true
 
 [[dotfiles]]
-source = "../nvim"
+source = "dev/dotfiles/nvim"
 target = ".config/nvim"
 isFile = false
 
 [[dotfiles]]
-source = "../config/typioca.conf"
+source = "dev/dotfiles/config/typioca.conf"
 target = "./Library/Application Support/typioca/typioca.conf"
 isFile = true
