@@ -145,8 +145,9 @@ func readSymlinkConfig() []symlinkMsg {
 }
 
 func (m *loadModel) createSymlink() tea.Msg {
-  pause := time.Duration(rand.Int63n(899)+100) * time.Millisecond // nolint:gosecA
+  pause := time.Duration(rand.Int63n(199)+100) * time.Millisecond // nolint:gosecA
   time.Sleep(pause)
+  start := time.Now()
   homeDir, err := os.UserHomeDir()
   if err != nil {
       log.Fatal( err )
@@ -154,10 +155,25 @@ func (m *loadModel) createSymlink() tea.Msg {
 
   msg := m.symlinksToCreate[0]
   m.symlinksToCreate = m.symlinksToCreate[1:]
-  msg.duration = pause
   msg.source = path.Join(homeDir, msg.source)
   msg.target = path.Join(homeDir, msg.target)
+
+  ts := fmt.Sprint(time.Now().UnixMilli())
+  symlinkPathTmp := msg.target + ts + ".tmp"
+  if err := os.Remove(symlinkPathTmp); err != nil && !os.IsNotExist(err) {
+    return err
+  }
+
+  if err := os.Symlink(msg.source, symlinkPathTmp); err != nil {
+    return err
+  }
+
+  if err := os.Rename(symlinkPathTmp, msg.target); err != nil {
+    return err
+  }
+
   log.Printf("linking: %+v to %+v in %+v,  total: %+v", msg.source, msg.target, msg.duration, m.symlinksCreated)
+  msg.duration = time.Now().Sub(start)
   return msg
 }
 
