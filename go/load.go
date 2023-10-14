@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-  "math/rand"
+	"math/rand"
 	"os"
-  "path"
+	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -158,17 +159,30 @@ func (m *loadModel) createSymlink() tea.Msg {
   msg.source = path.Join(homeDir, msg.source)
   msg.target = path.Join(homeDir, msg.target)
 
+
+  if _, err := os.Stat(msg.target); os.IsNotExist(err) { 
+    err := os.MkdirAll(filepath.Dir(msg.target), 0666)
+    if err != nil {
+      log.Printf("%+v", err)
+      return err
+    }
+  }
+ 
   ts := fmt.Sprint(time.Now().UnixMilli())
   symlinkPathTmp := msg.target + ts + ".tmp"
+
   if err := os.Remove(symlinkPathTmp); err != nil && !os.IsNotExist(err) {
+    log.Printf("%+v", err)
     return err
   }
 
   if err := os.Symlink(msg.source, symlinkPathTmp); err != nil {
+    log.Printf("%+v", err)
     return err
   }
 
   if err := os.Rename(symlinkPathTmp, msg.target); err != nil {
+    log.Printf("%+v", err)
     return err
   }
 
