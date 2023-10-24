@@ -46,6 +46,11 @@ func (s symlinkMsg) String() string {
 	if s.duration == 0 {
 		return dotStyle.Render(strings.Repeat(".", 30))
 	}
+
+  if s.err != nil {
+    return fmt.Sprintf("❌ %+v", s.err)
+  }
+
 	return fmt.Sprintf("🔗 Linked %s to %s in %s", s.source, s.target,
 		durationStyle.Render(s.duration.String()))
 }
@@ -173,17 +178,17 @@ func (m *loadModel) createSymlink() tea.Msg {
 
   if err := os.Remove(symlinkPathTmp); err != nil && !os.IsNotExist(err) {
     log.Printf("%+v", err)
-    return err
+    msg.err = err
   }
 
   if err := os.Symlink(msg.source, symlinkPathTmp); err != nil {
     log.Printf("%+v", err)
-    return err
+    msg.err = err
   }
 
   if err := os.Rename(symlinkPathTmp, msg.target); err != nil {
     log.Printf("%+v", err)
-    return err
+    msg.err = err
   }
 
   log.Printf("linking: %+v to %+v in %+v,  total: %+v", msg.source, msg.target, msg.duration, m.symlinksCreated)
