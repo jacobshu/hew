@@ -21,12 +21,32 @@ func openDB() *devDB {
 		log.Println("No .env file found")
 	}
 
-	uri := os.Getenv("MONGODB_URI")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	
+  uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+    log.Println("Warning:\n\tTo use the task manager, you must set your 'MONGODB_URI' environment variable.\n\tSee https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+
+    client, err := mongo.Connect(ctx, options.Client())
+    if err != nil {
+      panic(err)
+    } 
+
+    mock := devDB{
+      db:  client,
+      ctx: ctx,
+      closeDb: func() {
+        cancel()
+        if err := client.Disconnect(ctx); err != nil {
+          panic(err)
+        }
+      },
+      tasks: client.Database("dev").Collection("tasks"),
+      links: client.Database("dev").Collection("links"),
+    }
+    return &mock
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
