@@ -33,6 +33,11 @@ target = ".config/nvim"
 isFile = false
 
 [[dotfiles]]
+source = "dev/dotfiles/bin/netcoredbg"
+target = "/usr/local/bin/netcoredbg"
+isFile = false
+
+[[dotfiles]]
 source = "dev/dotfiles/config/typioca.conf"
 target = "./Library/Application Support/typioca/typioca.conf"
 isFile = true
