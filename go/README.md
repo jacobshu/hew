@@ -2,6 +2,12 @@
 
 A CLI for my own use. Initially written in Rust, it has been ported to and expanded in Go.
 
+To make the `hew` available globally run: 
+
+```shell
+sudo ln -s /Users/jacobshu/dev/dotfiles/hew/go/hew /usr/local/bin
+```
+
 ## Commands
 
 ### Task
