@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"reflect"
 	"time"
@@ -66,6 +67,39 @@ func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
 	return _id, nil
 }
 
+func (t *devDB) InsertOne(collection string, document any, opts options.InsertOneOptions) error {
+  col := t.db.Database("dev").Collection(collection)
+  result, err := col.InsertOne(t.ctx, document)
+  if err != nil {
+    return err
+  }
+
+	log.Printf("insertOne in %s: %+v", collection, result)
+  t.closeDb()
+  return nil
+}
+
+func (t *devDB) Find(collection string, filter bson.E, opts options.FindOptions) (any, error) {
+  col := t.db.Database("dev").Collection(collection)
+  cursor, err := col.Find(t.ctx, filter)
+  if err != nil {
+    log.Fatalf("failed to find in %s: %+v", collection, err)
+  }
+
+  var results []bson.M
+  if err = cursor.All(context.TODO(), &results); err != nil {
+    log.Fatalf("failed to iterate on find in %s, %+v", collection, err)
+  }
+
+  log.Printf("find in %s: %+v", collection, results)
+  t.closeDb()
+  return results, err
+
+}
+
+func (t *devDB) update(collection string, opts options.UpdateOptions) {}
+func (t *devDB) delete(collection string, opts options.DeleteOptions) {}
+
 func (t *devDB) insertTask(name, project string) error {
 	newTask := task{
 		Name:    name,
@@ -74,14 +108,11 @@ func (t *devDB) insertTask(name, project string) error {
 		Created: time.Now(),
 	}
 
-	result, err := t.tasks.InsertOne(context.TODO(), newTask)
+	err := t.InsertOne("task", newTask, *options.InsertOne().SetBypassDocumentValidation(false))
 	if err != nil {
 		return err
 	}
 
-	log.Printf("insert task: %+v", result)
-
-	t.closeDb()
 	return nil
 }
 
@@ -90,7 +121,7 @@ func (t *devDB) deleteTaskById(strId string) error {
 	if err != nil {
 		return err
 	}
-	result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{"_id", id}})
+  result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 	log.Printf("deleted: %+v", result)
 	t.closeDb()
 	return err
@@ -110,11 +141,11 @@ func (t *devDB) updateTask(strId string, task task) error {
 	}
 	orig.merge(task)
 
-	filter := bson.D{{"_id", orig.ID}}
-	update := bson.D{{"$set", bson.D{
-		{"name", orig.Name},
-		{"project", orig.Project},
-		{"status", orig.Status},
+  filter := bson.D{{Key: "_id", Value: orig.ID}}
+  update := bson.D{{Key: "$set", Value: bson.D{
+    {Key: "name", Value: orig.Name},
+    {Key: "project", Value: orig.Project},
+    {Key: "status", Value: orig.Status},
 	}}}
 	result, err := t.tasks.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
