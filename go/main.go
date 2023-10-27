@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+  "strings"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -16,14 +16,13 @@ import (
 //go:embed symlinks.toml
 var symlinksToml string
 
-func openDB() *devDB {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+//go:embed .env
+var uri string
 
+func openDB() *devDB {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	
-  uri := os.Getenv("MONGODB_URI")
+  uri = strings.ReplaceAll(uri, "\n", "")
 	if uri == "" {
     log.Println("Warning:\n\tTo use the task manager, you must set your 'MONGODB_URI' environment variable.\n\tSee https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 
