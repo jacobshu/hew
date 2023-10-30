@@ -75,7 +75,6 @@ func newLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 
 func (m loadModel) Init() tea.Cmd {
 	readSymlinkConfig()
-  log.Printf("%+v", m.symlinksToCreate) 
 	return m.spinner.Tick
 }
 
@@ -137,7 +136,6 @@ func readSymlinkConfig() []symlinkMsg {
 
   var s []symlinkMsg
   for _, l := range conf.Dotfiles {
-    log.Printf("dotfile: %+v", l)
     n := symlinkMsg{source: l.Source, target: l.Target}
     s = append(s, n) 
   }
@@ -147,7 +145,6 @@ func readSymlinkConfig() []symlinkMsg {
 	}
 
   return s
-  //log.Printf("read: %+v", s)
 }
 
 func (m *loadModel) createSymlink() tea.Msg {
@@ -161,12 +158,19 @@ func (m *loadModel) createSymlink() tea.Msg {
 
   msg := m.symlinksToCreate[0]
   m.symlinksToCreate = m.symlinksToCreate[1:]
-  msg.source = path.Join(homeDir, msg.source)
-  msg.target = path.Join(homeDir, msg.target)
+  if string(msg.source[0]) != "/" {
+    msg.source = path.Join(homeDir, msg.source)
+  }
+  
+  if string(msg.target[0]) != "/" {
+    msg.target = path.Join(homeDir, msg.target)
+  }
 
+  log.Printf("linking: %+v to %+v in %+v,  total: %+v", msg.source, msg.target, msg.duration, m.symlinksCreated)
 
   if _, err := os.Stat(msg.target); os.IsNotExist(err) { 
-    err := os.MkdirAll(filepath.Dir(msg.target), 0666)
+    log.Printf("ensuring path for %+v: %+v", msg.target, err)
+    err := os.MkdirAll(filepath.Dir(msg.target), 0700)
     if err != nil {
       log.Printf("%+v", err)
       return err
@@ -191,7 +195,6 @@ func (m *loadModel) createSymlink() tea.Msg {
     msg.err = err
   }
 
-  log.Printf("linking: %+v to %+v in %+v,  total: %+v", msg.source, msg.target, msg.duration, m.symlinksCreated)
   msg.duration = time.Now().Sub(start)
   return msg
 }
