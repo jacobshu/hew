@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -75,11 +74,10 @@ func (t *devDB) InsertOne(collection string, document any, opts options.InsertOn
   }
 
 	log.Printf("insertOne in %s: %+v", collection, result)
-  t.closeDb()
   return nil
 }
 
-func (t *devDB) Find(collection string, filter bson.E, opts options.FindOptions) (any, error) {
+func (t *devDB) Find(collection string, filter bson.D, opts options.FindOptions) ([]bson.M, error) {
   col := t.db.Database("dev").Collection(collection)
   cursor, err := col.Find(t.ctx, filter)
   if err != nil {
@@ -92,7 +90,6 @@ func (t *devDB) Find(collection string, filter bson.E, opts options.FindOptions)
   }
 
   log.Printf("find in %s: %+v", collection, results)
-  t.closeDb()
   return results, err
 
 }
@@ -123,7 +120,6 @@ func (t *devDB) deleteTaskById(strId string) error {
 	}
   result, err := t.tasks.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 	log.Printf("deleted: %+v", result)
-	t.closeDb()
 	return err
 }
 
@@ -153,7 +149,6 @@ func (t *devDB) updateTask(strId string, task task) error {
 	}
 
 	log.Printf("updated: %+v", result)
-	t.closeDb()
 	return nil
 }
 
@@ -179,22 +174,12 @@ func (t *devDB) getTasks() ([]task, error) {
 	var tasks []task
 
 	var results []bson.M
-	cursor, err := t.tasks.Find(context.TODO(), bson.D{{}})
-
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// This error means your query did not match any documents.
-			return tasks, nil
-		}
-		return tasks, fmt.Errorf("unable to get values: %w", err)
-	}
-
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		panic(err)
-	}
+	results, err := t.Find("tasks", bson.D{{}}, options.FindOptions{})
+  if err != nil {
+    return tasks, err
+  }
 
 	for _, result := range results {
-		//cursor.Decode(&result)
 		var task = task{
 			ID:      result["_id"].(primitive.ObjectID),
 			Name:    result["name"].(string),
@@ -207,7 +192,6 @@ func (t *devDB) getTasks() ([]task, error) {
 		tasks = append(tasks, task)
 	}
 
-	t.closeDb()
 	return tasks, err
 }
 
@@ -237,7 +221,19 @@ func (t *taskDB) getTasksByStatus(status string) ([]task, error) {
 */
 
 func (t *devDB) getTask(id primitive.ObjectID) (task, error) {
-	var task task
-	err := t.tasks.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
-	return task, err
+  var resTask task
+  result, err := t.Find("tasks", bson.D{{Key: "_id", Value: id}}, options.FindOptions{})
+  if err != nil {
+    return resTask, err
+  }
+	// err := t.tasks.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&task)
+  resTask = task{
+    ID:      result[0]["_id"].(primitive.ObjectID),
+    Name:    result[0]["name"].(string),
+    Project: result[0]["project"].(string),
+    Status:  result[0]["status"].(string),
+    Created: result[0]["created"].(primitive.DateTime).Time(),
+    //Completed: result["completed"].(primitive.DateTime).Time(),
+  }
+	return resTask, err
 }
