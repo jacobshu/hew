@@ -24,7 +24,12 @@ isFile = true
 
 [[dotfiles]]
 source = "dev/dotfiles/config/.zshrc"
-target = ".zshrc"
+target = ".config/zsh/.zshrc"
+isFile = true
+
+[[dotfiles]]
+source = "dev/dotfiles/config/.zshenv"
+target = ".config/zsh/.zshenv"
 isFile = true
 
 [[dotfiles]]
@@ -33,11 +38,16 @@ target = ".config/nvim"
 isFile = false
 
 [[dotfiles]]
-source = "dev/dotfiles/bin/netcoredbg"
-target = "/usr/local/bin/netcoredbg"
-isFile = false
-
-[[dotfiles]]
 source = "dev/dotfiles/config/typioca.conf"
 target = "./Library/Application Support/typioca/typioca.conf"
 isFile = true
+
+[[dotfiles]]
+source = "dev/dotfiles/config/ngrok.yml"
+target = "./Library/Application Support/ngrok/ngrok.yml"
+isFile = true
+
+[[dotfiles]]
+source = "dev/dotfiles/bin/netcoredbg"
+target = "/usr/local/bin/netcoredbg"
+isFile = false
