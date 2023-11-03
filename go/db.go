@@ -96,7 +96,16 @@ func (t *devDB) Find(collection string, filter bson.D, opts options.FindOptions)
 	return results, err
 }
 
-func (t *devDB) update(collection string, opts options.UpdateOptions) {}
+func (t *devDB) Update(collection string, update bson.D, filter bson.D, opts options.UpdateOptions) error {
+  col := t.db.Database("dev").Collection("tasks")
+  result, err := col.UpdateMany(context.TODO(), filter, update, &opts)
+	if err != nil {
+		return err
+	}
+
+  log.Printf("updated %+v documents in %+v", result.ModifiedCount, collection)
+  return nil
+}
 
 func (t *devDB) Delete(collection string, filter bson.D, opts *options.DeleteOptions) (int, error) {
 	col := t.db.Database("dev").Collection(collection)
@@ -167,12 +176,11 @@ func (t *devDB) updateTask(strId string, task task) error {
 		{Key: "project", Value: orig.Project},
 		{Key: "status", Value: orig.Status},
 	}}}
-	result, err := t.tasks.UpdateOne(context.TODO(), filter, update)
+	err = t.Update("tasks", update, filter, options.UpdateOptions{})
 	if err != nil {
 		return err
 	}
 
-	log.Printf("updated: %+v", result)
 	return nil
 }
 
