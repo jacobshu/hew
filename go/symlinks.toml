@@ -1,6 +1,5 @@
 # symlinks for various dotfiles
-# the target paths are all relative to the HOME directory
-version = "1.0"
+version = "1.1"
 
 [[dotfiles]]
 source = "dev/dotfiles/config/nightfox.yaml"
@@ -30,6 +29,11 @@ isFile = true
 [[dotfiles]]
 source = "dev/dotfiles/config/.zshenv"
 target = ".config/zsh/.zshenv"
+isFile = true
+
+[[dotfiles]]
+source = "dev/dotfiles/config/tmux.conf"
+target = ".config/tmux/tmux.conf"
 isFile = true
 
 [[dotfiles]]
