@@ -9,8 +9,7 @@ import (
   "strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+  "github.com/jackc/pgx/v5"
 )
 
 //go:embed symlinks.toml
@@ -26,7 +25,7 @@ func openDB() *devDB {
 	if uri == "" {
     log.Println("Warning:\n\tTo use the task manager, you must set your 'MONGODB_URI' environment variable.\n\tSee https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 
-    client, err := mongo.Connect(ctx, options.Client())
+    client, err := pgx.Connect(ctx, uri)
     if err != nil {
       panic(err)
     } 
@@ -36,18 +35,16 @@ func openDB() *devDB {
       ctx: ctx,
       closeDb: func() {
         cancel()
-        if err := client.Disconnect(ctx); err != nil {
+        if err := client.Close(ctx); err != nil {
           panic(err)
         }
       },
-      tasks: client.Database("dev").Collection("tasks"),
-      links: client.Database("dev").Collection("links"),
     }
     return &mock
 	}
 
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	client, err := pgx.Connect(ctx, uri)
 	if err != nil {
 		panic(err)
 	}
@@ -57,12 +54,10 @@ func openDB() *devDB {
 		ctx: ctx,
 		closeDb: func() {
 			cancel()
-			if err := client.Disconnect(ctx); err != nil {
+			if err := client.Close(ctx); err != nil {
 				panic(err)
 			}
 		},
-		tasks: client.Database("dev").Collection("tasks"),
-		links: client.Database("dev").Collection("links"),
 	}
 	return &t
 }
