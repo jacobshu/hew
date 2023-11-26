@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+
+  "github.com/jackc/pgx/v5"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,25 +30,13 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Name      string             `json:"name" bson:"name"`
-	Project   string             `json:"project" bson:"project"`
-	Status    string             `json:"status" bson:"status"`
-	Created   time.Time          `json:"created" bson:"created"`
-	Completed time.Time          `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
-}
-
-// implement list.Item & list.DefaultItem
-func (t task) FilterValue() string {
-	return t.Name
-}
-
-func (t task) Title() string {
-	return t.Name
-}
-
-func (t task) Description() string {
-	return t.Project
+	ID          int32 `json:"_id,omitempty" bson:"_id,omitempty"`
+	Description string             `json:"name" bson:"name"`
+	Project     string             `json:"project" bson:"project"`
+  DependsOn   int32              `json:"depends_on,omitempty" bson:"depends_on,omitempty"`
+	Status      int32             `json:"status" bson:"status"`
+	Created     time.Time          `json:"created" bson:"created"`
+	Completed   time.Time          `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
 }
 
 func (s status) Int() int {
@@ -53,12 +44,57 @@ func (s status) Int() int {
 }
 
 type devDB struct {
-	db      *mongo.Client
+	db      *pgx.Conn
 	ctx     context.Context
 	closeDb func()
-	tasks   *mongo.Collection
-	links   *mongo.Collection
 }
+
+func (t *devDB) listTasks() ([]task, error) {
+	rows, _ := t.db.Query(context.Background(), "select * from tasks")
+
+  results := []task{}
+	for rows.Next() {
+		var id int32
+		var description string
+    var project int32
+    var depends_on int32
+    var status int32
+    var created time.Time
+    var completed time.Time
+		err := rows.Scan(&id, &description, &project, &depends_on, &status, &created, &completed)
+		if err != nil {
+			return results, err
+		}
+
+    results = append(results, task{
+      ID: id,
+      Description: description,
+      Project: project,
+      DependsOn: depends_on,
+      Status: status,
+      Created: created,
+      Completed: completed,
+    })
+	}
+
+	return results, nil
+}
+
+func (t *devDB) addTask(description string) error {
+	_, err := t.db.Exec(context.Background(), "insert into tasks(description) values($1)", description)
+	return err
+}
+
+func updateTask(itemNum int32, description string) error {
+	_, err := conn.Exec(context.Background(), "update tasks set description=$1 where id=$2", description, itemNum)
+	return err
+}
+
+func removeTask(itemNum int32) error {
+	_, err := conn.Exec(context.Background(), "delete from tasks where id=$1", itemNum)
+	return err
+}
+
 
 func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
 	_id, err := primitive.ObjectIDFromHex(str)
