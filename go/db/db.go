@@ -13,7 +13,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -30,13 +29,13 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID          int32 `json:"_id,omitempty" bson:"_id,omitempty"`
-	Description string             `json:"name" bson:"name"`
-	Project     string             `json:"project" bson:"project"`
-  DependsOn   int32              `json:"depends_on,omitempty" bson:"depends_on,omitempty"`
-	Status      int32             `json:"status" bson:"status"`
-	Created     time.Time          `json:"created" bson:"created"`
-	Completed   time.Time          `json:"completed,omitempty" bson:"completed,omitempty" optional:"yes"`
+	ID          int32 
+	Description string
+	Project     int32
+  DependsOn   int32
+	Status      int32
+	Created     time.Time
+	Completed   time.Time
 }
 
 func (s status) Int() int {
@@ -80,18 +79,32 @@ func (t *devDB) listTasks() ([]task, error) {
 	return results, nil
 }
 
-func (t *devDB) addTask(description string) error {
-	_, err := t.db.Exec(context.Background(), "insert into tasks(description) values($1)", description)
+func (t *devDB) addTask(task task) error {
+  var project_id int32
+  row, _ := t.db.Query(context.Background(), "select id from projects where name = $1", task.Project)
+  if (task.Project != nil) {
+    rows, _ := t.db.Query(context.Background(), "select id from projects where name = $1", task.Project)
+  }
+  tx, err := t.db.Begin(context.Background())
+  if err != nil {
+    return err
+  }
+
+  defer tx.Rollback(context.Background())
+
+  
+  _, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
+  _, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
 	return err
 }
 
-func updateTask(itemNum int32, description string) error {
-	_, err := conn.Exec(context.Background(), "update tasks set description=$1 where id=$2", description, itemNum)
+func (t *devDB) updateTask(itemNum int32, description string) error {
+	_, err := t.db.Exec(context.Background(), "update tasks set description=$1 where id=$2", description, itemNum)
 	return err
 }
 
-func removeTask(itemNum int32) error {
-	_, err := conn.Exec(context.Background(), "delete from tasks where id=$1", itemNum)
+func (t *devDB) removeTask(itemNum int32) error {
+	_, err := t.db.Exec(context.Background(), "delete from tasks where id=$1", itemNum)
 	return err
 }
 
@@ -103,17 +116,6 @@ func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
 		return primitive.ObjectIDFromHex("00000000000000000000")
 	}
 	return _id, nil
-}
-
-func (t *devDB) InsertOne(collection string, document any, opts options.InsertOneOptions) error {
-	col := t.db.Database("dev").Collection(collection)
-	result, err := col.InsertOne(t.ctx, document)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("insertOne in %s: %+v", collection, result)
-	return nil
 }
 
 func (t *devDB) Find(collection string, filter bson.D, opts options.FindOptions) ([]bson.M, error) {
