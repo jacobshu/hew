@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-  "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,10 +29,11 @@ func (s status) String() string {
 }
 
 type task struct {
-	ID          int32 
+	ID          int32
 	Description string
-	Project     int32
-  DependsOn   int32
+	ProjectID   int32
+	ProjectName string
+	DependsOn   int32
 	Status      int32
 	Created     time.Time
 	Completed   time.Time
@@ -49,52 +50,56 @@ type devDB struct {
 }
 
 func (t *devDB) listTasks() ([]task, error) {
-	rows, _ := t.db.Query(context.Background(), "select * from tasks")
+	tasksWithProjects, _ := t.db.Query(context.Background(),
+		"select * from tasks left join projects on tasks.project_id = projects.id")
 
-  results := []task{}
-	for rows.Next() {
+	results := []task{}
+	for tasksWithProjects.Next() {
 		var id int32
 		var description string
-    var project int32
-    var depends_on int32
-    var status int32
-    var created time.Time
-    var completed time.Time
-		err := rows.Scan(&id, &description, &project, &depends_on, &status, &created, &completed)
+		var project_name string
+		var project int32
+		var depends_on int32
+		var status int32
+		var created time.Time
+		var completed time.Time
+		err := tasksWithProjects.Scan(&id, &description, &project, &project_name, &depends_on, &status, &created, &completed)
 		if err != nil {
 			return results, err
 		}
 
-    results = append(results, task{
-      ID: id,
-      Description: description,
-      Project: project,
-      DependsOn: depends_on,
-      Status: status,
-      Created: created,
-      Completed: completed,
-    })
+		results = append(results, task{
+			ID:          id,
+			Description: description,
+			ProjectID:   project,
+			ProjectName: project_name,
+			DependsOn:   depends_on,
+			Status:      status,
+			Created:     created,
+			Completed:   completed,
+		})
 	}
 
 	return results, nil
 }
 
 func (t *devDB) addTask(task task) error {
-  var project_id int32
-  row, _ := t.db.Query(context.Background(), "select id from projects where name = $1", task.Project)
-  if (task.Project != nil) {
-    rows, _ := t.db.Query(context.Background(), "select id from projects where name = $1", task.Project)
-  }
-  tx, err := t.db.Begin(context.Background())
-  if err != nil {
-    return err
-  }
+	var project_id int32
+  // project name is provided but there's no project id, insert a new project
+	if task.ProjectName != "" && task.ProjectID == 0 {
+		row, _ := t.db.Query(context.Background(), "select id from projects where name = $1", task.ProjectName)
+		row.Scan(&project_id)
+	}
 
-  defer tx.Rollback(context.Background())
+	tx, err := t.db.Begin(context.Background())
+	if err != nil {
+		return err
+	}
 
-  
-  _, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
-  _, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
+	defer tx.Rollback(context.Background())
+
+	_, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
+	_, err = tx.Exec(context.Background(), "insert into tasks(description, depends_on) values($1, $2)", task.Description, task.DependsOn)
 	return err
 }
 
@@ -107,7 +112,6 @@ func (t *devDB) removeTask(itemNum int32) error {
 	_, err := t.db.Exec(context.Background(), "delete from tasks where id=$1", itemNum)
 	return err
 }
-
 
 func (t *devDB) ObjectIdFromString(str string) (primitive.ObjectID, error) {
 	_id, err := primitive.ObjectIDFromHex(str)
@@ -135,14 +139,14 @@ func (t *devDB) Find(collection string, filter bson.D, opts options.FindOptions)
 }
 
 func (t *devDB) Update(collection string, update bson.D, filter bson.D, opts options.UpdateOptions) error {
-  col := t.db.Database("dev").Collection("tasks")
-  result, err := col.UpdateMany(context.TODO(), filter, update, &opts)
+	col := t.db.Database("dev").Collection("tasks")
+	result, err := col.UpdateMany(context.TODO(), filter, update, &opts)
 	if err != nil {
 		return err
 	}
 
-  log.Printf("updated %+v documents in %+v", result.ModifiedCount, collection)
-  return nil
+	log.Printf("updated %+v documents in %+v", result.ModifiedCount, collection)
+	return nil
 }
 
 func (t *devDB) Delete(collection string, filter bson.D, opts *options.DeleteOptions) (int, error) {
@@ -183,13 +187,13 @@ func (t *devDB) deleteTaskById(strId string) error {
 		return err
 	}
 	result, err := t.Delete("tasks", bson.D{{Key: "_id", Value: id}}, &options.DeleteOptions{})
-  if err != nil {
-    log.Printf("error deleting task with id %+v", strId)
-  } else if result > 1 {
-    log.Printf("oops, deleted more than 1")
-  } else {
-    log.Printf("deleted id: %+v", strId)
-  }
+	if err != nil {
+		log.Printf("error deleting task with id %+v", strId)
+	} else if result > 1 {
+		log.Printf("oops, deleted more than 1")
+	} else {
+		log.Printf("deleted id: %+v", strId)
+	}
 
 	return err
 }
