@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
   "github.com/jackc/pgx/v5"
