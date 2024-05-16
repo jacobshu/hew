@@ -1,14 +1,16 @@
 package main
 
-import "github.com/jacobshu/hew/cmd"
+import (
+  "embed"
+
+  "hew.jacobshu.dev/cmd"
+)
 
 //go:embed symlinks.toml
 var symlinksToml string
 
-//go:embed .env
-var uri string
-
+type ErrMsg struct{ err error }
 
 func main() {
-  cmd.Execute()
+  cmd.Start()
 }

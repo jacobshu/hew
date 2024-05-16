@@ -14,6 +14,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+  "hew.jacobshu.dev/pkg/forestfox"
 )
 
 type symlink struct {
@@ -28,8 +30,8 @@ type symlinkConfig struct {
 }
 
 var (
-	spinnerStyle  = lipgloss.NewStyle().Foreground(forestfox["cyan"])
-	helpStyle     = lipgloss.NewStyle().Foreground(forestfox["green"]).Margin(1, 0)
+	spinnerStyle  = lipgloss.NewStyle().Foreground(forestfox.Theme["cyan"])
+	helpStyle     = lipgloss.NewStyle().Foreground(forestfox.Theme["green"]).Margin(1, 0)
 	dotStyle      = helpStyle.Copy().UnsetMargins()
 	durationStyle = dotStyle.Copy()
 	appStyle      = lipgloss.NewStyle().Margin(1, 2, 0, 2)
@@ -62,7 +64,7 @@ type loadModel struct {
 	quitting bool
 }
 
-func newLoadModel(symlinksToCreate []symlinkMsg) loadModel {
+func NewLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 	s := spinner.New()
 	s.Style = spinnerStyle
   s.Spinner = spinner.Points
@@ -74,7 +76,7 @@ func newLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 }
 
 func (m loadModel) Init() tea.Cmd {
-	readSymlinkConfig()
+	ReadSymlinkConfig()
 	return m.spinner.Tick
 }
 
@@ -130,9 +132,9 @@ func (m loadModel) View() string {
 	return appStyle.Render(s)
 }
 
-func readSymlinkConfig() []symlinkMsg {
+func ReadSymlinkConfig(symlinkToml) []symlinkMsg {
 	var conf symlinkConfig
-  _, err := toml.Decode(symlinksToml, &conf)
+  _, err := toml.Decode(symlinkToml, &conf)
 
   var s []symlinkMsg
   for _, l := range conf.Dotfiles {

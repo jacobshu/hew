@@ -1,8 +1,8 @@
-package main
+package forestfox
 
 import "github.com/charmbracelet/lipgloss"
 
-var Forestfox = map[string]lipgloss.Color{
+var Theme = map[string]lipgloss.Color{
 	"bg":            lipgloss.Color("#283038"),
 	"black":         lipgloss.Color("#374149"),
 	"red":           lipgloss.Color("#da7280"),
