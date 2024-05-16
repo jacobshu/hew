@@ -75,8 +75,8 @@ func NewLoadModel(symlinksToCreate []symlinkMsg) loadModel {
 	}
 }
 
-func (m loadModel) Init() tea.Cmd {
-	ReadSymlinkConfig()
+func (m loadModel) Init(symlinkToml) tea.Cmd {
+	m.symlinksToCreate = readSymlinkConfig(symlinkToml)
 	return m.spinner.Tick
 }
 
@@ -132,7 +132,7 @@ func (m loadModel) View() string {
 	return appStyle.Render(s)
 }
 
-func ReadSymlinkConfig(symlinkToml) []symlinkMsg {
+func readSymlinkConfig(symlinkToml) []symlinkMsg {
 	var conf symlinkConfig
   _, err := toml.Decode(symlinkToml, &conf)
 
