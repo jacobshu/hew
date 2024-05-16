@@ -55,10 +55,9 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func loadRoot(cmd *cobra.Command, args []string) {
-	symlinksToCreate := load.ReadSymlinkConfig()
-	p := tea.NewProgram(load.NewLoadModel(symlinksToCreate))
+	p := tea.NewProgram(load.NewLoadModel())
 	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		fmt.Println("Error running load:", err)
 		os.Exit(1)
 	}
 }
