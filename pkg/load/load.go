@@ -83,7 +83,6 @@ func (m loadModel) Init() tea.Cmd {
 }
 
 func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-  log.Printf("update func...\n%#v", m.symlinksToCreate)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		m.quitting = true
@@ -120,7 +119,6 @@ func (m loadModel) View() string {
 	s += "\n\n"
 
 	for _, res := range m.symlinksToCreate {
-		//log.Printf("%+v => %+v", res.source, res.target)
 		s += res.String() + "\n"
 	}
 
@@ -149,7 +147,6 @@ func readSymlinkConfig() []symlinkMsg {
 	var s []symlinkMsg
 	for _, l := range config.Dotfiles {
 		n := symlinkMsg{source: l.Source, target: l.Target}
-    log.Printf("making symlink struct: \n%#v\n", n)
 		s = append(s, n)
 	}
 
@@ -161,7 +158,7 @@ func readSymlinkConfig() []symlinkMsg {
 }
 
 func (m *loadModel) createSymlink() tea.Msg {
-  log.Println("createSymlink...")
+  log.Println("createSymlink func...")
 	pause := time.Duration(rand.Int63n(199)+100) * time.Millisecond // nolint:gosecA
 	time.Sleep(pause)
 	start := time.Now()
@@ -170,7 +167,6 @@ func (m *loadModel) createSymlink() tea.Msg {
 		log.Fatal(err)
 	}
 
-  log.Printf("about to access symlink msg from: \n%#v\n", m.symlinksToCreate)
 	msg := m.symlinksToCreate[0]
 	m.symlinksToCreate = m.symlinksToCreate[1:]
 	if string(msg.source[0]) != "/" {
