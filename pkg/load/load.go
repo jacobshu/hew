@@ -85,8 +85,12 @@ func (m loadModel) Init() tea.Cmd {
 func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.quitting = true
-		return m, tea.Quit
+    s := msg.String()
+    if s == "q" || s == "esc" || s == "ctrl+c" {
+      m.quitting = true
+      return m, tea.Quit
+    }
+    return m, nil 
 	case symlinkMsg:
 		m.symlinksCreated += 1
 		m.symlinksToCreate = append(m.symlinksToCreate[1:], msg)
