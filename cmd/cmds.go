@@ -9,6 +9,7 @@ import (
 
   "hew.jacobshu.dev/pkg/cht"
   "hew.jacobshu.dev/pkg/load"
+  "hew.jacobshu.dev/pkg/stardew"
 )
 
 func BuildCmdTree() *cobra.Command {
@@ -35,6 +36,13 @@ func BuildCmdTree() *cobra.Command {
 	}
 	rootCmd.AddCommand(loadCmd)
 
+  var stardewCmd = &cobra.Command{
+		Use:   "stardew",
+		Short: "game utils",
+		Args:  cobra.NoArgs,
+		Run:   stardewRoot,
+	}
+	rootCmd.AddCommand(stardewCmd)
 	return rootCmd
 }
 
@@ -60,5 +68,13 @@ func loadRoot(cmd *cobra.Command, args []string) {
 		fmt.Println("Error running load:", err)
 		os.Exit(1)
 	}
+}
+
+func stardewRoot(cmd *cobra.Command, args []string) {
+  p := tea.NewProgram(stardew.NewStardewModel())
+  if _, err := p.Run(); err != nil {
+    fmt.Printf("Error running stardew: \n%#v", err)
+    os.Exit(1)
+  }
 }
 
