@@ -3,10 +3,11 @@ package stardew
 import (
 	"encoding/xml"
 	"fmt"
-  "io/fs"
+	"io/fs"
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -15,8 +16,25 @@ import (
 )
 
 type stardewModel struct {
-	save_dirs []string
+	saves []Save
 	quitting  bool
+}
+
+type Save struct {
+  name string
+  path string
+  data SaveData
+}
+
+type SaveData struct {
+	Player      player `xml:"player"`
+	IsRaining   bool   `xml:"isRaining"`
+	IsLightning bool   `xml:"isLightning"`
+	IsSnowing   bool   `xml:"isSnowing"`
+}
+
+type player struct {
+	Name string `xml:"name"`
 }
 
 var (
@@ -43,24 +61,40 @@ func NewStardewModel() stardewModel {
 		fmt.Println(file)
 	}
 
-	fs.WalkDir(os.DirFS(savesDir), ".", func(path string, d fs.DirEntry, err error) error {
+  var sd []Save
+	fs.WalkDir(os.DirFS(savesDir), ".", func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Fatal(err)
 		}
 
-    info, err := d.Info()
-    if err != nil {
-      log.Printf("error getting info: %#v", err)
-    }
-    fmt.Printf("path: %#v, \ninfo: %#v\n", path, info)
+		if d.IsDir() ||
+			strings.Contains(filepath, "_old") ||
+			strings.Contains(filepath, "GameInfo") ||
+			strings.Contains(filepath, "steam_autocloud") ||
+      strings.Contains(filepath, ".DS_Store") {
+			return nil
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			log.Printf("error getting info: %#v", err)
+		}
+
+    absPath := path.Join(savesDir, filepath)
+    name := strings.Split(info.Name(), "_")
+    sd = append(sd, Save{ name: name[0], path: absPath })
+		// fmt.Printf("path: %#v, \nname: %#v\n", filepath, info.Name())
 		return nil
 	})
 
-	return stardewModel{}
+  fmt.Printf("sd: %#v", sd)
+	return stardewModel{
+    saves: sd, 
+  }
 }
 
-func IsXML(data []byte) bool {
-    return xml.Unmarshal(data, new(interface{})) == nil
+func getPlayerModel(data []byte) bool {
+	return xml.Unmarshal(data, new(interface{})) == nil
 }
 
 func (m stardewModel) Init() tea.Cmd {
