@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
   "hew.jacobshu.dev/pkg/cht"
+  "hew.jacobshu.dev/pkg/kinsta"
   "hew.jacobshu.dev/pkg/load"
   "hew.jacobshu.dev/pkg/stardew"
 )
@@ -36,6 +37,14 @@ func BuildCmdTree() *cobra.Command {
 	}
 	rootCmd.AddCommand(loadCmd)
 
+  var kinstaCmd = &cobra.Command{
+		Use:   "kinsta",
+		Short: "Orchestrate Kinsta from the comfort of your terminal",
+		Args:  cobra.NoArgs,
+		Run:   kinstaRoot,
+	}
+	rootCmd.AddCommand(kinstaCmd)
+
   var stardewCmd = &cobra.Command{
 		Use:   "stardew",
 		Short: "game utils",
@@ -58,6 +67,14 @@ func chtRoot(cmd *cobra.Command, args []string) {
 	)
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Uh oh, there was an error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func kinstaRoot(cmd *cobra.Command, args []string) {
+	p := tea.NewProgram(load.NewLoadModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Println("Error running load:", err)
 		os.Exit(1)
 	}
 }
