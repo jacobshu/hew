@@ -72,11 +72,12 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func kinstaRoot(cmd *cobra.Command, args []string) {
-	p := tea.NewProgram(load.NewLoadModel())
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running load:", err)
-		os.Exit(1)
-	}
+  kinsta.Companies()
+	// p := tea.NewProgram(load.NewLoadModel())
+	// if _, err := p.Run(); err != nil {
+	// 	fmt.Println("Error running load:", err)
+	// 	os.Exit(1)
+	// }
 }
 
 func loadRoot(cmd *cobra.Command, args []string) {
