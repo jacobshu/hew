@@ -1,74 +1,76 @@
 package kinsta
 
 type Company struct {
-	id string
+	Id    string `json:"id"`
+	Sites []Site
+}
+
+type Site struct {
+	Id           string `json:"id"`
+	Name         string `json:"name"`
+	DisplayName  string `json:"display_name"`
+	CompanyId    string `json:"company_id"` // references company.id
+	Status       string `json:"status"`
+	SiteLabels   []Label
+	Environments []Environments `json:"environments"`
+	ClientId     string         // references client.id
 }
 
 type Clients struct {
-	client_id string
-	name      string
+	Id   string `json:"client_id"`
+	Name string `json:"name"`
 }
 
 type Domains struct {
-	domain_id string
-	name      string
-	type_     string
-	site_id   string //{ references: () => Sites.columns.site_id }),
+	Domain_id string `json:"domain_id"`
+	Name      string `json:"name"`
+	Type_     string `json:"type_"`
+	Site_id   string `json:"site_id"` // references site.id
 }
 
 type Environments struct {
-	environment_id string
-	name           string
-	is_premium     bool
-	is_blocked     bool
-	site_id        string //{ references: () => Sites.columns.site_id }),
-	primary_domain string //{ references: () => Domains.columns.domain_id }),
+	Id             string `json:"id"`
+	Name           string `json:"name"`
+	IsPremium      bool   `json:"is_premium"`
+	IsBlocked      bool   `json:"is_blocked"`
+	Site_id        string `json:"site_id"`        //{ references: () => Sites.columns.site_id }),
+	Primary_domain string `json:"primary_domain"` //{ references: () => Domains.columns.domain_id }),
 	// ssh port and ip are retrieved from /sites/{site_id}/environments
 	// every other column can come from /sites/{site_id}
 	// so may not be worth adding due to the extra API calls
-	ssh_port string //{ optional: true }),
-	ssh_ip   string //{ optional: true }),
+	Ssh_port string `json:"ssh_port"` //{ optional: true }),
+	Ssh_ip   string `json:"ssh_ip"`   //{ optional: true }),
 }
 
 type KinstaCompanies struct {
-	company_id string
-	name       string
+	Company_id string `json:"company_id"`
+	Name       string `json:"name"`
 }
 
 // labels can be retrieved from /sites/{site_id}
 type Label struct {
-	label_id string
-	name     string
+	Label_id string `json:"label_id"`
+	Name     string `json:"name"`
 }
 
 type Plugins struct {
-	plugin_environment_id string //{ references: () => Environments.columns.environment_id }),
-	name                  string
-	title                 string
-	status                string
-	version               string
-	update_available      bool
-	update_version        string
-	update_status         string
+	Plugin_environment_id string `json:"plugin_environment_id"` //{ references: () => Environments.columns.environment_id }),
+	Name                  string `json:"name"`
+	Title                 string `json:"title"`
+	Status                string `json:"status"`
+	Version               string `json:"version"`
+	Update_available      bool   `json:"update_available"`
+	Update_version        string `json:"update_version"`
+	Update_status         string `json:"update_status"`
 }
 
 type Themes struct {
-	theme_environment_id string //{ references: () => Environments.columns.environment_id }),
-	name                 string
-	title                string
-	status               string
-	version              string
-	update_available     bool
-	update_version       string
-	update_status        string
-}
-
-type Site struct {
-	id           string
-	name         string
-	display_name string
-	status       string
-	site_labels  []Label
-	company_id   string //{ references: () => KinstaCompanies.columns.company_id }),
-	client_id    string //{ references: () => Clients.columns.client_id, optional: true }),
+	Theme_environment_id string `json:"theme_environment_id"` //{ references: () => Environments.columns.environment_id }),
+	Name                 string `json:"name"`
+	Title                string `json:"title"`
+	Status               string `json:"status"`
+	Version              string `json:"version"`
+	Update_available     bool   `json:"update_available"`
+	Update_version       string `json:"update_version"`
+	Update_status        string `json:"update_status"`
 }
