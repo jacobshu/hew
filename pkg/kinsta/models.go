@@ -36,10 +36,9 @@ type KinstaCompanies struct {
 }
 
 // labels can be retrieved from /sites/{site_id}
-type Labels struct {
+type Label struct {
 	label_id string
 	name     string
-	site_id  string //{ references: () => Sites.columns.site_id }),
 }
 
 type Plugins struct {
@@ -64,11 +63,12 @@ type Themes struct {
 	update_status        string
 }
 
-type Sites struct {
-	site_id      string
+type Site struct {
+	id           string
 	name         string
 	display_name string
 	status       string
+	site_labels  []Label
 	company_id   string //{ references: () => KinstaCompanies.columns.company_id }),
 	client_id    string //{ references: () => Clients.columns.client_id, optional: true }),
 }

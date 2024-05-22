@@ -27,11 +27,4 @@ func main() {
 
 }
 
-func Companies() {
-  sites, err := Kinsta("GET", "/sites?company=fbd13128-664b-4cd3-9f1e-725a1a4d6f54", nil)
-  if err != nil {
-    fmt.Printf("error getting sites %v", err)
-  }
-  
-  fmt.Printf("sites: \n%#v", sites)
-}
+

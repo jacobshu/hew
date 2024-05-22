@@ -7,10 +7,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-  "hew.jacobshu.dev/pkg/cht"
-  "hew.jacobshu.dev/pkg/kinsta"
-  "hew.jacobshu.dev/pkg/load"
-  "hew.jacobshu.dev/pkg/stardew"
+	"hew.jacobshu.dev/pkg/cht"
+	"hew.jacobshu.dev/pkg/kinsta"
+	"hew.jacobshu.dev/pkg/load"
+	"hew.jacobshu.dev/pkg/stardew"
 )
 
 func BuildCmdTree() *cobra.Command {
@@ -37,7 +37,7 @@ func BuildCmdTree() *cobra.Command {
 	}
 	rootCmd.AddCommand(loadCmd)
 
-  var kinstaCmd = &cobra.Command{
+	var kinstaCmd = &cobra.Command{
 		Use:   "kinsta",
 		Short: "Orchestrate Kinsta from the comfort of your terminal",
 		Args:  cobra.NoArgs,
@@ -45,7 +45,7 @@ func BuildCmdTree() *cobra.Command {
 	}
 	rootCmd.AddCommand(kinstaCmd)
 
-  var stardewCmd = &cobra.Command{
+	var stardewCmd = &cobra.Command{
 		Use:   "stardew",
 		Short: "game utils",
 		Args:  cobra.NoArgs,
@@ -72,7 +72,7 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func kinstaRoot(cmd *cobra.Command, args []string) {
-  kinsta.Companies()
+	kinsta.GetSites("fbd13128-664b-4cd3-9f1e-725a1a4d6f54")
 	// p := tea.NewProgram(load.NewLoadModel())
 	// if _, err := p.Run(); err != nil {
 	// 	fmt.Println("Error running load:", err)
@@ -89,10 +89,9 @@ func loadRoot(cmd *cobra.Command, args []string) {
 }
 
 func stardewRoot(cmd *cobra.Command, args []string) {
-  p := tea.NewProgram(stardew.NewStardewModel())
-  if _, err := p.Run(); err != nil {
-    fmt.Printf("Error running stardew: \n%#v", err)
-    os.Exit(1)
-  }
+	p := tea.NewProgram(stardew.NewStardewModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running stardew: \n%#v", err)
+		os.Exit(1)
+	}
 }
-
