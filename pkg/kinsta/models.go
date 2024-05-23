@@ -12,7 +12,7 @@ type Site struct {
 	Status       string        `json:"status"`
 	SiteLabels   []Label       `json:"site_labels"`
 	Environments []Environment `json:"environments"`
-  CompanyID    string        `json:"company_id"` // references company.id
+	CompanyID    string        `json:"company_id"` // references company.id
 	ClientID     string        // references client.id
 }
 
@@ -29,17 +29,17 @@ type Domain struct {
 }
 
 type Environment struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	IsPremium bool   `json:"is_premium"`
-	IsBlocked bool   `json:"is_blocked"`
-	SiteID    string `json:"site_id"` // references site_id
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	IsPremium     bool   `json:"is_premium"`
+	IsBlocked     bool   `json:"is_blocked"`
+	SiteID        string `json:"site_id"`       // references site_id
+	PrimaryDomain Domain `json:"primaryDomain"` // references domain_id
+	SSHPort       string `json:"ssh_port"`
+	SSHIP         string `json:"ssh_ip"`
 	// Domains       []Domain `json:"domains"`
-	PrimaryDomain Domain `json:"primary_domain"` // references domain_id
 	// ssh port and ip are retrieved from /sites/{site_id}/environments
 	// every other column can come from /sites/{site_id}
-	SSHPort string `json:"ssh_port"`
-	SSHIP   string `json:"ssh_ip"`
 }
 
 type KinstaCompanies struct {

@@ -72,25 +72,15 @@ func GetSite(siteId string) (Site, error) {
 
 	siteBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites/" + siteId})
 	if err != nil {
-		fmt.Printf("error getting site %v\n", err)
+		return Site{}, err
 	}
-
-  fmt.Printf("stringy response:\n%v\n", string(siteBody))
 
 	site := GetSiteResponse{}
 	err = json.Unmarshal([]byte(siteBody), &site)
 	if err != nil {
-    fmt.Printf("error unmarshalling: %v\n", err)
+    return Site{}, err
 	}
 
-  var envs []Environment
-  for _, env := range site.Site.Environments {
-    fmt.Printf("environment: \n%#v\n", env)
-    envs = append(envs, env) 
-  }
-
-  site.Site.Environments = envs
-	fmt.Printf("site:\n%#v\n", site)
 	return site.Site, nil
 }
 
