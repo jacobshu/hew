@@ -150,3 +150,29 @@ func GetPlugins(envID string) ([]Plugin, error) {
 
   return plugins.Environment.Container.WPPlugins.Data, nil 
 }
+
+func GetThemes(envID string) ([]Theme, error) {
+  url := "/sites/environments/" + envID + "/themes"
+  themeBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+  if err != nil {
+    return []Theme{}, err
+  }
+
+  themes := struct {
+    Environment struct {
+      Container struct {
+        WPThemes struct {
+          Data []Theme `json:"data"`
+        } `json:"wp_themes"`
+      } `json:"container_info"`
+    } `json:"environment"`
+  }{}
+
+  err = json.Unmarshal([]byte(themeBody), &themes)
+  if err != nil {
+    return []Theme{}, err
+  }
+
+  return themes.Environment.Container.WPThemes.Data, nil
+}
+
