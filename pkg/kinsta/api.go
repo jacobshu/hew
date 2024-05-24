@@ -127,72 +127,111 @@ func GetEnvironments(siteID string) ([]Environment, error) {
 }
 
 func GetPlugins(envID string) ([]Plugin, error) {
-  url := "/sites/environments/" + envID + "/plugins"
-  pluginBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
-  if err != nil {
-    return []Plugin{}, err
-  }
+	url := "/sites/environments/" + envID + "/plugins"
+	pluginBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+	if err != nil {
+		return []Plugin{}, err
+	}
 
-  plugins := struct {
-    Environment struct {
-      Container struct {
-        WPPlugins struct {
-          Data []Plugin `json:"data"`
-        } `json:"wp_plugins"`
-      } `json:"container_info"`
-    } `json:"environment"`
-  }{}
+	plugins := struct {
+		Environment struct {
+			Container struct {
+				WPPlugins struct {
+					Data []Plugin `json:"data"`
+				} `json:"wp_plugins"`
+			} `json:"container_info"`
+		} `json:"environment"`
+	}{}
 
-  err = json.Unmarshal([]byte(pluginBody), &plugins)
-  if err != nil {
-    return []Plugin{}, err
-  }
+	err = json.Unmarshal([]byte(pluginBody), &plugins)
+	if err != nil {
+		return []Plugin{}, err
+	}
 
-  return plugins.Environment.Container.WPPlugins.Data, nil 
+	return plugins.Environment.Container.WPPlugins.Data, nil
 }
 
 func GetThemes(envID string) ([]Theme, error) {
-  url := "/sites/environments/" + envID + "/themes"
-  themeBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
-  if err != nil {
-    return []Theme{}, err
-  }
+	url := "/sites/environments/" + envID + "/themes"
+	themeBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+	if err != nil {
+		return []Theme{}, err
+	}
 
-  themes := struct {
-    Environment struct {
-      Container struct {
-        WPThemes struct {
-          Data []Theme `json:"data"`
-        } `json:"wp_themes"`
-      } `json:"container_info"`
-    } `json:"environment"`
-  }{}
+	themes := struct {
+		Environment struct {
+			Container struct {
+				WPThemes struct {
+					Data []Theme `json:"data"`
+				} `json:"wp_themes"`
+			} `json:"container_info"`
+		} `json:"environment"`
+	}{}
 
-  err = json.Unmarshal([]byte(themeBody), &themes)
-  if err != nil {
-    return []Theme{}, err
-  }
+	err = json.Unmarshal([]byte(themeBody), &themes)
+	if err != nil {
+		return []Theme{}, err
+	}
 
-  return themes.Environment.Container.WPThemes.Data, nil
+	return themes.Environment.Container.WPThemes.Data, nil
 }
 
 func GetBackups(envID string) ([]Backup, error) {
-  url := "/sites/environments/" + envID + "/backups"
-  backupBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
-  if err != nil {
-    return []Backup{}, err
-  }
+	url := "/sites/environments/" + envID + "/backups"
+	backupBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+	if err != nil {
+		return []Backup{}, err
+	}
 
-  backups := struct {
-    Environment struct {
-      Backups []Backup `json:"backups"`
-    } `json:"environment"`
-  }{}
+	backups := struct {
+		Environment struct {
+			Backups []Backup `json:"backups"`
+		} `json:"environment"`
+	}{}
 
-  err = json.Unmarshal(backupBody, &backups)
-  if err != nil {
-    return []Backup{}, err
-  }
+	err = json.Unmarshal(backupBody, &backups)
+	if err != nil {
+		return []Backup{}, err
+	}
 
-  return backups.Environment.Backups, nil
+	return backups.Environment.Backups, nil
+}
+
+func CreateManualBackup(envID string) (string, error) {
+	url := "sites/environments/" + envID + "/manual-backups"
+	responseBody, err := kinsta(RequestOpts{method: "POST", endpoint: url})
+	if err != nil {
+		return "", err
+	}
+
+	operation := struct {
+		OperationID string `json:"operation_id"`
+	}{}
+	err = json.Unmarshal(responseBody, &operation)
+	if err != nil {
+		return "", err
+	}
+
+	return operation.OperationID, nil
+}
+
+func IsOperationFinished(operationID string) (bool, error) {
+	url := "/operations/" + operationID
+	responseBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+	if err != nil {
+		return false, err
+	}
+
+	status := struct {
+		Code int `json:"status"`
+	}{}
+	err = json.Unmarshal(responseBody, &status)
+	if err != nil {
+		return false, nil
+	}
+
+	if status.Code == 200 {
+		return true, nil
+	}
+	return false, nil
 }
