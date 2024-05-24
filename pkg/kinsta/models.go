@@ -80,3 +80,11 @@ type Theme struct {
 	UpdateVersion   string `json:"update_version"`
 	UpdateStatus    string `json:"update_status"`
 }
+
+type Backup struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Note      string `json:"note"`
+	Type_     string `json:"type"`
+	CreatedAt int    `json:"created_at"`
+}

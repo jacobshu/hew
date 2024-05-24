@@ -176,3 +176,23 @@ func GetThemes(envID string) ([]Theme, error) {
   return themes.Environment.Container.WPThemes.Data, nil
 }
 
+func GetBackups(envID string) ([]Backup, error) {
+  url := "/sites/environments/" + envID + "/backups"
+  backupBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+  if err != nil {
+    return []Backup{}, err
+  }
+
+  backups := struct {
+    Environment struct {
+      Backups []Backup `json:"backups"`
+    } `json:"environment"`
+  }{}
+
+  err = json.Unmarshal(backupBody, &backups)
+  if err != nil {
+    return []Backup{}, err
+  }
+
+  return backups.Environment.Backups, nil
+}
