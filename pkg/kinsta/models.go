@@ -29,17 +29,23 @@ type Domain struct {
 }
 
 type Environment struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	IsPremium     bool   `json:"is_premium"`
-	IsBlocked     bool   `json:"is_blocked"`
-	SiteID        string `json:"-"`             // references site_id
-	PrimaryDomain Domain `json:"primaryDomain"` // references domain_id
-	SSHPort       string `json:"ssh_port"`
-	SSHIP         string `json:"ssh_ip"`
+	ID            string        `json:"id"`
+	Name          string        `json:"name"`
+	IsPremium     bool          `json:"is_premium"`
+	IsBlocked     bool          `json:"is_blocked"`
+	SiteID        string        `json:"-"`             // references site_id
+	PrimaryDomain Domain        `json:"primaryDomain"` // references domain_id
+	SSH           SSHConnection `json:"ssh_connection,omitempty"`
 	// Domains       []Domain `json:"domains"`
-	// ssh port and ip are retrieved from /sites/{site_id}/environments
-	// every other column can come from /sites/{site_id}
+	// ssh connection is  retrieved from /sites/{site_id}/environments
+	// every other field can come from /sites/{site_id}
+}
+
+type SSHConnection struct {
+	SSHPort string `json:"ssh_port"`
+	SSHIP   struct {
+		ExternalIP string `json:"external_ip"`
+	} `json:"ssh_ip"`
 }
 
 type KinstaCompanies struct {

@@ -106,3 +106,25 @@ func GetSites(companyId string) ([]Site, error) {
 
 	return sites.Company.Sites, nil
 }
+
+func GetEnvironments(siteID string) ([]Environment, error) {
+  type GetEnvironmentsResponse struct {
+    Site struct {
+      Environments []Environment `json:"environments"`
+    } `json:"site"`
+  }
+
+  url := "/sites/" + siteID + "/environments"
+  envBody, err := kinsta(RequestOpts{ method: "GET", endpoint: url })
+  if err != nil {
+    return []Environment{}, err
+  }
+
+  envs := GetEnvironmentsResponse{}
+  err = json.Unmarshal([]byte(envBody), &envs)
+  if err != nil {
+    return []Environment{}, err
+  }
+
+  return envs.Site.Environments, nil
+}
