@@ -125,3 +125,28 @@ func GetEnvironments(siteID string) ([]Environment, error) {
 
 	return envs.Site.Environments, nil
 }
+
+func GetPlugins(envID string) ([]Plugin, error) {
+  url := "/sites/environments/" + envID + "/plugins"
+  pluginBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+  if err != nil {
+    return []Plugin{}, err
+  }
+
+  plugins := struct {
+    Environment struct {
+      Container struct {
+        WPPlugins struct {
+          Data []Plugin `json:"data"`
+        } `json:"wp_plugins"`
+      } `json:"container_info"`
+    } `json:"environment"`
+  }{}
+
+  err = json.Unmarshal([]byte(pluginBody), &plugins)
+  if err != nil {
+    return []Plugin{}, err
+  }
+
+  return plugins.Environment.Container.WPPlugins.Data, nil 
+}

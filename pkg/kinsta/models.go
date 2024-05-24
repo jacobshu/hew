@@ -59,7 +59,7 @@ type Label struct {
 	Name string `json:"name"`
 }
 
-type Plugins struct {
+type Plugin struct {
 	EnvironmentID   string `json:"-"` // references environment_id
 	Name            string `json:"name"`
 	Title           string `json:"title"`
@@ -70,7 +70,7 @@ type Plugins struct {
 	UpdateStatus    string `json:"update_status"`
 }
 
-type Themes struct {
+type Theme struct {
 	EnvironmentID   string `json:"-"` // references environment_id
 	Name            string `json:"name"`
 	Title           string `json:"title"`
