@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -72,7 +73,18 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func kinstaRoot(cmd *cobra.Command, args []string) {
-	kinsta.GetSites("fbd13128-664b-4cd3-9f1e-725a1a4d6f54")
+  data, err := kinsta.IsOperationFinished("")
+
+  if err != nil {
+    fmt.Printf("error\n%#v\n", err)
+  }
+
+  s, err := json.MarshalIndent(data, "", "\t")
+  if err != nil {
+    fmt.Printf("error\n%#v\n", err)
+  }
+  fmt.Println(string(s))
+
 	// p := tea.NewProgram(load.NewLoadModel())
 	// if _, err := p.Run(); err != nil {
 	// 	fmt.Println("Error running load:", err)
