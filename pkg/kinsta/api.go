@@ -41,7 +41,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 		for param, val := range opts.queryParams {
 			q.Add(param, val)
 		}
-    req.URL.RawQuery = q.Encode()
+		req.URL.RawQuery = q.Encode()
 	}
 
 	req.Header.Add("Accept", "application/json")
@@ -54,7 +54,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-    b, _ := io.ReadAll(resp.Body)
+		b, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("received status code %v\n", string(b))
 	}
 
@@ -67,64 +67,61 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func GetSite(siteId string) (Site, error) {
-  type GetSiteResponse struct {
-    Site Site `json:"site"`
-  }
-
-	siteBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites/" + siteId})
+func GetSite(siteID string) (Site, error) {
+	siteBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites/" + siteID})
 	if err != nil {
 		return Site{}, err
 	}
 
-	site := GetSiteResponse{}
+	site := struct {
+		Site Site `json:"site"`
+	}{}
+
 	err = json.Unmarshal([]byte(siteBody), &site)
 	if err != nil {
-    return Site{}, err
+		return Site{}, err
 	}
 
 	return site.Site, nil
 }
 
-func GetSites(companyId string) ([]Site, error) {
-  type GetSitesResponse struct {
-    Company struct {
-      Sites []Site `json:"sites"`
-    } `json:"company"`
-  }
-  
-	sitesBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites", queryParams: map[string]string{"company": companyId}})
+func GetSites(companyID string) ([]Site, error) {
+	sitesBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites", queryParams: map[string]string{"company": companyID}})
 	if err != nil {
-		return  []Site{}, err
+		return []Site{}, err
 	}
-  
-  sites := GetSitesResponse{}
-  err = json.Unmarshal([]byte(sitesBody), &sites)
-  if err != nil {
-    return []Site{}, err
-  }
+
+	sites := struct {
+		Company struct {
+			Sites []Site `json:"sites"`
+		} `json:"company"`
+	}{}
+
+	err = json.Unmarshal([]byte(sitesBody), &sites)
+	if err != nil {
+		return []Site{}, err
+	}
 
 	return sites.Company.Sites, nil
 }
 
 func GetEnvironments(siteID string) ([]Environment, error) {
-  type GetEnvironmentsResponse struct {
-    Site struct {
-      Environments []Environment `json:"environments"`
-    } `json:"site"`
-  }
+	url := "/sites/" + siteID + "/environments"
+	envBody, err := kinsta(RequestOpts{method: "GET", endpoint: url})
+	if err != nil {
+		return []Environment{}, err
+	}
 
-  url := "/sites/" + siteID + "/environments"
-  envBody, err := kinsta(RequestOpts{ method: "GET", endpoint: url })
-  if err != nil {
-    return []Environment{}, err
-  }
+	envs := struct {
+		Site struct {
+			Environments []Environment `json:"environments"`
+		} `json:"site"`
+	}{}
 
-  envs := GetEnvironmentsResponse{}
-  err = json.Unmarshal([]byte(envBody), &envs)
-  if err != nil {
-    return []Environment{}, err
-  }
+	err = json.Unmarshal([]byte(envBody), &envs)
+	if err != nil {
+		return []Environment{}, err
+	}
 
-  return envs.Site.Environments, nil
+	return envs.Site.Environments, nil
 }

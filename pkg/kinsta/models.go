@@ -10,7 +10,7 @@ type Site struct {
 	Name         string        `json:"name"`
 	DisplayName  string        `json:"display_name"`
 	Status       string        `json:"status"`
-	SiteLabels   []Label       `json:"site_labels"`
+	SiteLabels   []Label       `json:"site_labels,omitempty"`
 	Environments []Environment `json:"environments,omitempty"`
 	CompanyID    string        `json:"-"` // references company.id
 	ClientID     string        `json:"-"` // references client.id
@@ -42,10 +42,10 @@ type Environment struct {
 }
 
 type SSHConnection struct {
-	SSHPort string `json:"ssh_port"`
+	SSHPort string `json:"ssh_port,omitempty"`
 	SSHIP   struct {
-		ExternalIP string `json:"external_ip"`
-	} `json:"ssh_ip"`
+		ExternalIP string `json:"external_ip,omitempty"`
+	} `json:"ssh_ip,omitempty"`
 }
 
 type KinstaCompanies struct {
