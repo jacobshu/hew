@@ -11,9 +11,9 @@ type Site struct {
 	DisplayName  string        `json:"display_name"`
 	Status       string        `json:"status"`
 	SiteLabels   []Label       `json:"site_labels"`
-	Environments []Environment `json:"environments"`
-	CompanyID    string        `json:"company_id"` // references company.id
-	ClientID     string        // references client.id
+	Environments []Environment `json:"environments,omitempty"`
+	CompanyID    string        `json:"-"` // references company.id
+	ClientID     string        `json:"-"` // references client.id
 }
 
 type Clients struct {
@@ -25,7 +25,7 @@ type Domain struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Type_  string `json:"type"`
-	SiteID string `json:"site_id"` // references site.id
+	SiteID string `json:"-"` // references site.id
 }
 
 type Environment struct {
@@ -33,7 +33,7 @@ type Environment struct {
 	Name          string `json:"name"`
 	IsPremium     bool   `json:"is_premium"`
 	IsBlocked     bool   `json:"is_blocked"`
-	SiteID        string `json:"site_id"`       // references site_id
+	SiteID        string `json:"-"`             // references site_id
 	PrimaryDomain Domain `json:"primaryDomain"` // references domain_id
 	SSHPort       string `json:"ssh_port"`
 	SSHIP         string `json:"ssh_ip"`
@@ -49,12 +49,12 @@ type KinstaCompanies struct {
 
 // labels can be retrieved from /sites/{site_id}
 type Label struct {
-	ID   string `json:"id"`
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
 type Plugins struct {
-	EnvironmentID   string `json:"environment_id"` // references environment_id
+	EnvironmentID   string `json:"-"` // references environment_id
 	Name            string `json:"name"`
 	Title           string `json:"title"`
 	Status          string `json:"status"`
@@ -65,7 +65,7 @@ type Plugins struct {
 }
 
 type Themes struct {
-	EnvironmentID   string `json:"environment_id"` // references environment_id
+	EnvironmentID   string `json:"-"` // references environment_id
 	Name            string `json:"name"`
 	Title           string `json:"title"`
 	Status          string `json:"status"`
