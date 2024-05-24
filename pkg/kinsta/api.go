@@ -33,7 +33,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 
 	req, err := http.NewRequest(opts.method, url, opts.body)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, fmt.Errorf("error creating request: %v\n", err)
 	}
 
 	if len(opts.queryParams) > 0 {
@@ -41,6 +41,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 		for param, val := range opts.queryParams {
 			q.Add(param, val)
 		}
+    req.URL.RawQuery = q.Encode()
 	}
 
 	req.Header.Add("Accept", "application/json")
@@ -48,17 +49,18 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error performing request: %v", err)
+		return nil, fmt.Errorf("error performing request: %v\n", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("received status code %d", resp.StatusCode)
+    b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("received status code %v\n", string(b))
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %v", err)
+		return nil, fmt.Errorf("error reading response body: %v\n", err)
 	}
 	defer resp.Body.Close()
 
@@ -85,12 +87,22 @@ func GetSite(siteId string) (Site, error) {
 }
 
 func GetSites(companyId string) ([]Site, error) {
-	sites, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites", queryParams: map[string]string{"companyId": companyId}})
+  type GetSitesResponse struct {
+    Company struct {
+      Sites []Site `json:"sites"`
+    } `json:"company"`
+  }
+  
+	sitesBody, err := kinsta(RequestOpts{method: "GET", endpoint: "/sites", queryParams: map[string]string{"company": companyId}})
 	if err != nil {
-		fmt.Printf("error getting sites %v", err)
+		return  []Site{}, err
 	}
+  
+  sites := GetSitesResponse{}
+  err = json.Unmarshal([]byte(sitesBody), &sites)
+  if err != nil {
+    return []Site{}, err
+  }
 
-	fmt.Printf("sites: \n%#v", sites)
-
-	return nil, nil
+	return sites.Company.Sites, nil
 }
