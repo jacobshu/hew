@@ -1,6 +1,7 @@
 package kinsta
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +13,7 @@ import (
 type RequestOpts struct {
 	endpoint    string
 	method      string // TODO: enum refactor
-	body        io.Reader
+	body        interface{}
 	queryParams map[string]string
 }
 
@@ -31,7 +32,13 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest(opts.method, url, opts.body)
+	str, err := json.Marshal(opts.body)
+	if err != nil {
+		return nil, fmt.Errorf("error encoding body:\n%#v", opts.body)
+	}
+
+	body := bytes.NewReader([]byte(str))
+	req, err := http.NewRequest(opts.method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %v\n", err)
 	}
@@ -197,9 +204,16 @@ func GetBackups(envID string) ([]Backup, error) {
 	return backups.Environment.Backups, nil
 }
 
-func CreateManualBackup(envID string) (string, error) {
+func CreateManualBackup(envID string, note string) (string, error) {
 	url := "sites/environments/" + envID + "/manual-backups"
-	responseBody, err := kinsta(RequestOpts{method: "POST", endpoint: url})
+
+  tag := struct {
+    Tag string
+  }{
+    Tag: note,
+  }
+
+	responseBody, err := kinsta(RequestOpts{method: "POST", endpoint: url, body: tag})
 	if err != nil {
 		return "", err
 	}
