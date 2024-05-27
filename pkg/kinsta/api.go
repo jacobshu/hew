@@ -60,7 +60,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
 		b, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("received status code %v\n", string(b))
 	}
