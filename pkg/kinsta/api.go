@@ -32,13 +32,16 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 
 	client := &http.Client{}
 
-	str, err := json.Marshal(opts.body)
-	if err != nil {
-		return nil, fmt.Errorf("error encoding body:\n%#v", opts.body)
+	var body []byte
+	if opts.body != nil {
+		b, err := json.Marshal(opts.body)
+		if err != nil {
+			return nil, fmt.Errorf("error encoding body:\n%#v", opts.body)
+		}
+		body = b
 	}
 
-	body := bytes.NewReader([]byte(str))
-	req, err := http.NewRequest(opts.method, url, body)
+	req, err := http.NewRequest(opts.method, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %v\n", err)
 	}
@@ -53,6 +56,7 @@ func kinsta(opts RequestOpts) ([]byte, error) {
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -207,11 +211,11 @@ func GetBackups(envID string) ([]Backup, error) {
 func CreateManualBackup(envID string, note string) (string, error) {
 	url := "sites/environments/" + envID + "/manual-backups"
 
-  tag := struct {
-    Tag string
-  }{
-    Tag: note,
-  }
+	tag := struct {
+		Tag string `json:"tag"`
+	}{
+		Tag: note,
+	}
 
 	responseBody, err := kinsta(RequestOpts{method: "POST", endpoint: url, body: tag})
 	if err != nil {
