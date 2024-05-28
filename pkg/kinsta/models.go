@@ -12,6 +12,7 @@ type Site struct {
 	Status       string        `json:"status"`
 	SiteLabels   []Label       `json:"site_labels,omitempty"`
 	Environments []Environment `json:"environments,omitempty"`
+  Backups      []Backup      `json:"-"`
 	CompanyID    string        `json:"-"` // references company.id
 	ClientID     string        `json:"-"` // references client.id
 }
