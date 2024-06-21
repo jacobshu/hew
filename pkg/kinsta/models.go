@@ -12,7 +12,6 @@ type Site struct {
 	Status       string        `json:"status"`
 	SiteLabels   []Label       `json:"site_labels,omitempty"`
 	Environments []Environment `json:"environments,omitempty"`
-  Backups      []Backup      `json:"-"`
 	CompanyID    string        `json:"-"` // references company.id
 	ClientID     string        `json:"-"` // references client.id
 }
@@ -37,6 +36,7 @@ type Environment struct {
 	SiteID        string        `json:"-"`             // references site_id
 	PrimaryDomain Domain        `json:"primaryDomain"` // references domain_id
 	SSH           SSHConnection `json:"ssh_connection,omitempty"`
+	Backups       []Backup      `json:"-"`
 	// Domains       []Domain `json:"domains"`
 	// ssh connection is  retrieved from /sites/{site_id}/environments
 	// every other field can come from /sites/{site_id}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -11,6 +10,7 @@ import (
 	"hew.jacobshu.dev/pkg/cht"
 	"hew.jacobshu.dev/pkg/kinsta"
 	"hew.jacobshu.dev/pkg/load"
+	"hew.jacobshu.dev/pkg/shared"
 	"hew.jacobshu.dev/pkg/stardew"
 )
 
@@ -73,19 +73,15 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func kinstaRoot(cmd *cobra.Command, args []string) {
-  data, err := kinsta.IsOperationFinished("")
+  // data, err := kinsta.IsOperationFinished("")
+  data, err := kinsta.CreateManualBackup("", "test")
 
   if err != nil {
     fmt.Printf("error\n%#v\n", err)
   }
 
-  s, err := json.MarshalIndent(data, "", "\t")
-  if err != nil {
-    fmt.Printf("error\n%#v\n", err)
-  }
-  fmt.Println(string(s))
-
-	// p := tea.NewProgram(load.NewLoadModel())
+  shared.Pprint(data) 
+  	// p := tea.NewProgram(load.NewLoadModel())
 	// if _, err := p.Run(); err != nil {
 	// 	fmt.Println("Error running load:", err)
 	// 	os.Exit(1)
