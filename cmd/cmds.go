@@ -12,6 +12,7 @@ import (
 	"hew.jacobshu.dev/pkg/kinsta"
 	"hew.jacobshu.dev/pkg/load"
 	"hew.jacobshu.dev/pkg/stardew"
+  "hew.jacobshu.dev/pkg/hash"
 )
 
 func BuildCmdTree() *cobra.Command {
@@ -53,6 +54,15 @@ func BuildCmdTree() *cobra.Command {
 		Run:   stardewRoot,
 	}
 	rootCmd.AddCommand(stardewCmd)
+
+	var hashCmd = &cobra.Command{
+		Use:   "hash",
+		Short: "hashing utilities",
+    Args: cobra.MatchAll(cobra.ExactArgs(2), cobra.OnlyValidArgs),
+		Run:   hashRoot,
+	}
+	rootCmd.AddCommand(hashCmd)
+
 	return rootCmd
 }
 
@@ -73,17 +83,17 @@ func chtRoot(cmd *cobra.Command, args []string) {
 }
 
 func kinstaRoot(cmd *cobra.Command, args []string) {
-  data, err := kinsta.IsOperationFinished("")
+	data, err := kinsta.IsOperationFinished("")
 
-  if err != nil {
-    fmt.Printf("error\n%#v\n", err)
-  }
+	if err != nil {
+		fmt.Printf("error\n%#v\n", err)
+	}
 
-  s, err := json.MarshalIndent(data, "", "\t")
-  if err != nil {
-    fmt.Printf("error\n%#v\n", err)
-  }
-  fmt.Println(string(s))
+	s, err := json.MarshalIndent(data, "", "\t")
+	if err != nil {
+		fmt.Printf("error\n%#v\n", err)
+	}
+	fmt.Println(string(s))
 
 	// p := tea.NewProgram(load.NewLoadModel())
 	// if _, err := p.Run(); err != nil {
@@ -106,4 +116,8 @@ func stardewRoot(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error running stardew: \n%#v", err)
 		os.Exit(1)
 	}
+}
+
+func hashRoot(cmd *cobra.Command, args []string) {
+  	
 }
