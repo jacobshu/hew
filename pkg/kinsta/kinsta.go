@@ -52,8 +52,8 @@ func (m kinstaModel) Init() tea.Cmd {
   }
 
   columns := []table.Column{
-		table.NewColumn(columnKeyName, "Name", 20),
-		table.NewColumn(columnKeyStatus, "Status", 10),
+		// table.NewColumn(columnKeyName, "Name", 20),
+		// table.NewColumn(columnKeyStatus, "Status", 10),
   }
 
   rows := []table.Row{}
