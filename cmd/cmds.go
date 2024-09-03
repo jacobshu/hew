@@ -7,6 +7,7 @@ import (
 	"hew.jacobshu.dev/pkg/hash"
 	"hew.jacobshu.dev/pkg/kinsta"
 	"hew.jacobshu.dev/pkg/load"
+  "hew.jacobshu.dev/pkg/ai"
 )
 
 func BuildCmdTree() *cobra.Command {
@@ -23,6 +24,7 @@ func BuildCmdTree() *cobra.Command {
 	rootCmd.AddCommand(load.NewLoadCmd())
 	rootCmd.AddCommand(kinsta.NewKinstaCmd())
 	rootCmd.AddCommand(hash.NewHashCmd())
+	rootCmd.AddCommand(ai.NewAICmd())
 
 	return rootCmd
 }
