@@ -9,8 +9,6 @@ import (
 )
 
 func NewAICmd() *cobra.Command {
-	var model string
-	var context string
 	var aiCmd = &cobra.Command{
 		Use:   "ai",
 		Short: "Ask AI if you want ¯\\_(ツ)_/¯",
@@ -25,7 +23,5 @@ func NewAICmd() *cobra.Command {
 		},
 	}
 
-	aiCmd.Flags().StringVarP(&model, "model", "m", "sonnet", "which claude model to use")
-	aiCmd.Flags().StringVarP(&context, "context", "c", "./", "a group of files to include as context to the prompt")
 	return aiCmd
 }

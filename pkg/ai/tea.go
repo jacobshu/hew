@@ -3,19 +3,21 @@ package ai
 import (
 	// "encoding/xml"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/alecthomas/chroma/quick"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	// "github.com/charmbracelet/lipgloss"
-	"github.com/alecthomas/chroma/quick"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/sabhiram/go-gitignore"
 )
 
 const defaultPrompt = `<role>
-You are a software engineer with 200 years experience in writing self-documenting, concise code. You prefer composable code and hold to the tenets of pragramatic programming.
+You are a software engineer with 2000 years experience in writing self-documenting, concise code. You prefer composable code and hold to the tenets of pragramatic programming.
 </role>
 
 <instructions>
@@ -24,11 +26,7 @@ When providing a snippet of code, always use a code block with the name of the f
 When you generate the answer, first think how the output should be structured and add your answer in <thinking></thinking> tags. Make sure and think step-by-step. This is a space for you to write down relevant content and will not be shown to the user. Use it to consider how the code should be architected, potential sources of bugs, and testing strategies. Once you are done thinking, answer the question. Put your answer inside <answer></answer> XML tags.
 
 Complete the task only if you can produce high-quality code; otherwise tell me you can't and what keeps you from doing so.
-</instructions>
-
-`
-
-type state int
+</instructions>`
 
 const (
 	prePromptState state = iota
@@ -38,11 +36,26 @@ const (
 	responseState
 )
 
+var (
+	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
+	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+)
+
+type claudeResponse string
+type errMsg error
+type itemDelegate struct {
+  list.DefaultDelegate
+}
+type loadedItemsMsg struct {
+  items []list.Item
+}
+type promptMsg string
+type state int
+
 type item struct {
 	path     string
 	selected bool
 }
-
 func (i item) Title() string       { return i.path }
 func (i item) Description() string { return "" }
 func (i item) FilterValue() string { return i.path }
@@ -62,9 +75,12 @@ func NewAIModel() AIModel {
 	ti.Placeholder = "Enter pre-prompt or file path (leave empty for default)"
 	ti.Focus()
 
-	items := []list.Item{}
-	l := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	l := list.New([]list.Item{}, newItemDelegate(), 0, 0)
 	l.Title = "Select files/directories for context (space to select, enter when done)"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	// l.Styles.PaginationStyle = list.Pagination{}.Style().PaddingLeft(4)
+	l.Styles.HelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 
 	task := textinput.New()
 	task.Placeholder = "Enter task for Claude"
@@ -77,6 +93,41 @@ func NewAIModel() AIModel {
 	}
 }
 
+func newItemDelegate() *itemDelegate {
+	d := &itemDelegate{}
+
+	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
+		if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == " " {
+			index := m.Index()
+			if item, ok := m.SelectedItem().(item); ok {
+				item.selected = !item.selected
+				m.SetItem(index, item)
+			}
+		}
+		return nil
+	}
+
+	return d
+}
+
+func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	str := i.Title()
+	var renderedStr string
+	if index == m.Index() {
+		renderedStr = selectedItemStyle.Render("> " + str)
+	} else if i.selected {
+		renderedStr = selectedItemStyle.Render("[x] " + str)
+	} else {
+		renderedStr = itemStyle.Render(str)
+	}
+	fmt.Fprint(w, renderedStr)
+}
+
 func (m AIModel) Init() tea.Cmd {
 	return textinput.Blink
 }
@@ -85,6 +136,9 @@ func (m AIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case loadedItemsMsg:
+		m.contextList.SetItems(msg.items)
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -123,44 +177,59 @@ func (m AIModel) handleEnter() (tea.Model, tea.Cmd) {
 	switch m.state {
 	case prePromptState:
 		m.state = contextState
-		return m, m.loadContextItems
+		return m, tea.Batch(m.loadContextItems(), m.contextList.StartSpinner())
 	case contextState:
 		m.state = taskState
 		m.task.Focus()
 		return m, textinput.Blink
 	case taskState:
 		m.state = sendState
-		return m, m.generatePrompt
+		return m, m.generatePrompt()
 	}
 	return m, nil
 }
 
 func (m AIModel) toggleSelectedItem() (tea.Model, tea.Cmd) {
-	item := m.contextList.SelectedItem().(item)
-	item.selected = !item.selected
-	m.contextList.SetItem(m.contextList.Index(), item)
+	if i, ok := m.contextList.SelectedItem().(item); ok {
+		i.selected = !i.selected
+		m.contextList.SetItem(m.contextList.Index(), i)
+	}
 	return m, nil
 }
 
-func (m AIModel) loadContextItems() tea.Msg {
-	items := []list.Item{}
-	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			items = append(items, item{path: path})
-		}
-		return nil
-	})
-	if err != nil {
-		return errMsg(err)
-	}
-	m.contextList.SetItems(items)
-	return nil
-}
+func (m *AIModel) loadContextItems() tea.Cmd {
+	return func() tea.Msg {
+		items := []list.Item{}
 
-type promptMsg string
+		// Load .gitignore if it exists
+		ignore, _ := ignore.CompileIgnoreFile(".gitignore")
+
+		err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+      if strings.HasPrefix(path, ".git") {
+        return nil
+      }
+
+			// Check if the file should be ignored
+			if ignore != nil && ignore.MatchesPath(path) {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+
+			items = append(items, item{path: path, selected: false})
+			return nil
+		})
+		if err != nil {
+			return errMsg(err)
+		}
+		return loadedItemsMsg{items: items}
+	}
+}
 
 func (m AIModel) generatePrompt() tea.Cmd {
 	return func() tea.Msg {
@@ -177,13 +246,13 @@ func (m AIModel) generatePrompt() tea.Cmd {
 
 		var context strings.Builder
 		context.WriteString("<context>\n")
-		for _, item := range m.contextList.Items() {
-			if item.(item).selected {
-				content, err := os.ReadFile(item.(item).path)
+		for _, listItem := range m.contextList.Items() {
+			if i, ok := listItem.(item); ok && i.selected {
+				content, err := os.ReadFile(i.path)
 				if err != nil {
 					return errMsg(err)
 				}
-				context.WriteString(fmt.Sprintf("// %s\n%s\n\n", item.(item).path, string(content)))
+				context.WriteString(fmt.Sprintf("// %s\n%s\n\n", i.path, string(content)))
 			}
 		}
 		context.WriteString("</context>")
@@ -195,16 +264,14 @@ func (m AIModel) generatePrompt() tea.Cmd {
 	}
 }
 
-type claudeResponse string
 
 func sendToClaudeAPI(prompt string) tea.Cmd {
 	return func() tea.Msg {
 		// TODO: Implement actual API call
-		return claudeResponse("This is a mock response from Claude API.")
+		return claudeResponse(fmt.Sprintf("prompt: %v\n", prompt))
 	}
 }
 
-type errMsg error
 
 func (m AIModel) View() string {
 	switch m.state {
@@ -215,7 +282,13 @@ func (m AIModel) View() string {
 			"(press enter to continue)",
 		)
 	case contextState:
-		return m.contextList.View()
+		if len(m.contextList.Items()) == 0 {
+			return "Loading items..."
+		}
+		return fmt.Sprintf(
+			"Select files/directories for context:\n\n%s\n\n(space to select, enter when done)",
+			m.contextList.View(),
+		)
 	case taskState:
 		return fmt.Sprintf(
 			"Enter task for Claude:\n\n%s\n\n%s",
@@ -223,7 +296,7 @@ func (m AIModel) View() string {
 			"(press enter to send)",
 		)
 	case sendState:
-		return "Sending request to Claude API..."
+    return fmt.Sprintf("model: %v\n", m) //"Sending request to Claude API..."
 	case responseState:
 		var highlighted strings.Builder
 		quick.Highlight(&highlighted, m.response, "xml", "terminal", "monokai")
@@ -232,11 +305,3 @@ func (m AIModel) View() string {
 		return "An error occurred."
 	}
 }
-
-// func main() {
-// 	p := tea.NewProgram(NewAIModel())
-// 	if _, err := p.Run(); err != nil {
-// 		fmt.Printf("Error: %v", err)
-// 		os.Exit(1)
-// 	}
-// }
