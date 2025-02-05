@@ -15,54 +15,50 @@ import (
 )
 
 const (
-  columnKeyName = "name"
-  columnKeyStatus = "status"
-)
-
-var (
-	spinnerStyle  = lipgloss.NewStyle().Foreground(forestfox.Theme["cyan"])
-	helpStyle     = lipgloss.NewStyle().Foreground(forestfox.Theme["green"]).Margin(1, 0)
-	dotStyle      = helpStyle.Copy().UnsetMargins()
-	durationStyle = dotStyle.Copy()
-	appStyle      = lipgloss.NewStyle().Margin(1, 2, 0, 2)
+	columnKeyName   = "name"
+	columnKeyStatus = "status"
 )
 
 type kinstaModel struct {
 	spinner  spinner.Model
 	quitting bool
 	sites    []Site
-  table    table.Model
+	table    table.Model
+	theme    forestfox.Forestfox
 }
 
 func NewKinstaModel() kinstaModel {
+	theme := forestfox.GetTheme()
 	s := spinner.New()
-	s.Style = spinnerStyle
+	s.Style = lipgloss.NewStyle().Foreground(theme.Aqua.Lipgloss)
+
 	s.Spinner = spinner.Points
 
 	return kinstaModel{
 		spinner: s,
+		theme:   theme,
 	}
 }
 
 func (m kinstaModel) Init() tea.Cmd {
 	log.Println("kinstaModel Init")
-  sites, err := GetSites("fbd13128-664b-4cd3-9f1e-725a1a4d6f54")
-  if err != nil {
-    log.Fatalf("error in GetSites:\n%#v\n", err)
-  }
+	sites, err := GetSites("fbd13128-664b-4cd3-9f1e-725a1a4d6f54")
+	if err != nil {
+		log.Fatalf("error in GetSites:\n%#v\n", err)
+	}
 
-  columns := []table.Column{
+	columns := []table.Column{
 		// table.NewColumn(columnKeyName, "Name", 20),
 		// table.NewColumn(columnKeyStatus, "Status", 10),
-  }
+	}
 
-  rows := []table.Row{}
-  for _, site := range sites {
-    fmt.Printf("site:\n%v\n", site)
-    rows = append(rows, table.Row{site.DisplayName, site.Status})
-  }
+	rows := []table.Row{}
+	for _, site := range sites {
+		fmt.Printf("site:\n%v\n", site)
+		rows = append(rows, table.Row{site.DisplayName, site.Status})
+	}
 
-  t := table.New(
+	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
@@ -104,6 +100,8 @@ func (m kinstaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m kinstaModel) View() string {
+	helpStyle := lipgloss.NewStyle().Foreground(m.theme.Green.Lipgloss).Margin(1, 0)
+	appStyle := lipgloss.NewStyle().Margin(1, 2, 0, 2)
 	var s string
 
 	if m.quitting {

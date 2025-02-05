@@ -30,10 +30,9 @@ type symlinkConfig struct {
 }
 
 var (
-	spinnerStyle  = lipgloss.NewStyle().Foreground(forestfox.Theme["cyan"])
-	helpStyle     = lipgloss.NewStyle().Foreground(forestfox.Theme["green"]).Margin(1, 0)
-	dotStyle      = helpStyle.Copy().UnsetMargins()
-	durationStyle = dotStyle.Copy()
+	helpStyle     = lipgloss.NewStyle().Foreground(forestfox.GetTheme().Green.Lipgloss).Margin(1, 0)
+	dotStyle      = helpStyle.UnsetMargins()
+	durationStyle = dotStyle
 	appStyle      = lipgloss.NewStyle().Margin(1, 2, 0, 2)
 )
 
@@ -62,35 +61,37 @@ type loadModel struct {
 	symlinksToCreate []symlinkMsg
 	symlinksCreated  int
 	quitting         bool
+  theme forestfox.Forestfox
 }
 
 func NewLoadModel() loadModel {
+  theme := forestfox.GetTheme()
 	s := spinner.New()
-	s.Style = spinnerStyle
+	s.Style = lipgloss.NewStyle().Foreground(theme.Blue.Lipgloss)
 	s.Spinner = spinner.Points
-  symlinksFromConfig := readSymlinkConfig()
+	symlinksFromConfig := readSymlinkConfig()
 
 	return loadModel{
 		spinner:          s,
 		symlinksCreated:  0,
-    symlinksToCreate: symlinksFromConfig,
+		symlinksToCreate: symlinksFromConfig,
 	}
 }
 
 func (m loadModel) Init() tea.Cmd {
-  log.Println("loadModel Init")
+	log.Println("loadModel Init")
 	return m.spinner.Tick
 }
 
 func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-    s := msg.String()
-    if s == "q" || s == "esc" || s == "ctrl+c" {
-      m.quitting = true
-      return m, tea.Quit
-    }
-    return m, nil 
+		s := msg.String()
+		if s == "q" || s == "esc" || s == "ctrl+c" {
+			m.quitting = true
+			return m, tea.Quit
+		}
+		return m, nil
 	case symlinkMsg:
 		m.symlinksCreated += 1
 		m.symlinksToCreate = append(m.symlinksToCreate[1:], msg)
@@ -138,7 +139,7 @@ func (m loadModel) View() string {
 }
 
 func readSymlinkConfig() []symlinkMsg {
-  log.Println("readSymlinkConfig...")
+	log.Println("readSymlinkConfig...")
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
@@ -146,7 +147,7 @@ func readSymlinkConfig() []symlinkMsg {
 
 	var symlinksConfigPath = path.Join(homeDir, "/dev/dotfiles/config/symlinks.toml")
 	var config symlinkConfig
-  _, err = toml.DecodeFile(symlinksConfigPath, &config)
+	_, err = toml.DecodeFile(symlinksConfigPath, &config)
 
 	var s []symlinkMsg
 	for _, l := range config.Dotfiles {
@@ -157,12 +158,12 @@ func readSymlinkConfig() []symlinkMsg {
 	if err != nil {
 		log.Printf("error reading toml: %+v", err)
 	}
-  
+
 	return s
 }
 
 func (m *loadModel) createSymlink() tea.Msg {
-  log.Println("createSymlink func...")
+	log.Println("createSymlink func...")
 	pause := time.Duration(rand.Int63n(199)+100) * time.Millisecond // nolint:gosecA
 	time.Sleep(pause)
 	start := time.Now()

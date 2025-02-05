@@ -21,12 +21,6 @@ const (
 	useHighPerformanceRenderer = false
 )
 
-var (
-	inputStyle         = lipgloss.NewStyle().Foreground(forestfox.Theme["magenta"])
-	continueStyle      = lipgloss.NewStyle().Foreground(forestfox.Theme["brightBlack"])
-	continueFocusStyle = lipgloss.NewStyle().Foreground(forestfox.Theme["cyan"])
-)
-
 type errMsg struct{ err error }
 
 func (e errMsg) Error() string { return e.err.Error() }
@@ -39,6 +33,7 @@ type chtModel struct {
 	viewport viewport.Model
 	content  string
 	ready    bool
+	theme    forestfox.Forestfox
 }
 
 type (
@@ -69,6 +64,7 @@ func InitialChtModel() chtModel {
 		focused: 0,
 		err:     nil,
 		ready:   false,
+		theme:   forestfox.GetTheme(),
 	}
 }
 
@@ -122,7 +118,7 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Width(40).
 				Height(20).
 				BorderStyle(lipgloss.RoundedBorder()).
-				BorderForeground(forestfox.Theme["blue"]).
+				BorderForeground(m.theme.Blue.Lipgloss).
 				PaddingRight(2)
 
 			m.viewport = vp
@@ -155,6 +151,10 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m chtModel) View() string {
+	inputStyle := lipgloss.NewStyle().Foreground(m.theme.Magenta.Lipgloss)
+	continueStyle := lipgloss.NewStyle().Foreground(m.theme.Bg5.Lipgloss)
+	continueFocusStyle := lipgloss.NewStyle().Foreground(m.theme.Aqua.Lipgloss)
+
 	log.Printf("frame size: %+v\nstyle w: %+v\nviewport w: %+v",
 		m.viewport.Style.GetHorizontalFrameSize(),
 		m.viewport.Style.GetWidth(),
