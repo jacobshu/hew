@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"runtime"
 
 	"github.com/BurntSushi/toml"
 	"github.com/charmbracelet/lipgloss"
@@ -67,11 +68,18 @@ func GetTheme() Forestfox {
 		log.Fatal(err)
 	}
 
-	var ffPath = path.Join(homeDir, "/dev/dotfiles/ff/forestfox.toml")
+	os := runtime.GOOS
+	var ffPath string
+	if os == "windows" {
+		ffPath = path.Join(homeDir, "\\source\\repos\\dotfiles\\config\\forestfox.toml")
+	} else if os == "darwin" { // "darwin" is the value for macOS
+		ffPath = path.Join(homeDir, "/dev/dotfiles/ff/forestfox.toml")
+	}
+
 	var ff Forestfox
-	metadata, err := toml.DecodeFile(ffPath, &ff)
+	_, err = toml.DecodeFile(ffPath, &ff)
 	if err != nil {
-		log.Printf("error reading toml: %+v", err)
+		log.Printf("error reading forestfox toml: %+v", err)
 	}
 
 	ff.BgDim.Lipgloss = lipgloss.Color(ff.BgDim.Value)
@@ -116,8 +124,6 @@ func GetTheme() Forestfox {
 	ff.DimOrange.Lipgloss = lipgloss.Color(ff.DimOrange.Value)
 	ff.Orange.Lipgloss = lipgloss.Color(ff.Orange.Value)
 	ff.BrightOrange.Lipgloss = lipgloss.Color(ff.BrightOrange.Value)
-
-	log.Printf("GetTheme: %v", metadata.Keys())
 
 	return ff
 }

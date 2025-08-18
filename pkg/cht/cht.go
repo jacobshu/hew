@@ -64,7 +64,7 @@ func InitialChtModel() chtModel {
 		focused: 0,
 		err:     nil,
 		ready:   false,
-		theme:   forestfox.GetTheme(),
+		// theme:   forestfox.GetTheme(),
 	}
 }
 
