@@ -4,10 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"hew.jacobshu.dev/pkg/cht"
+	"hew.jacobshu.dev/pkg/du"
 	"hew.jacobshu.dev/pkg/hash"
 	"hew.jacobshu.dev/pkg/load"
-  "hew.jacobshu.dev/pkg/ai"
 	"hew.jacobshu.dev/pkg/logread"
+  "hew.jacobshu.dev/pkg/ai"
 )
 
 func BuildCmdTree() *cobra.Command {
@@ -20,10 +21,11 @@ func BuildCmdTree() *cobra.Command {
 		},
 	}
 
-	rootCmd.AddCommand(cht.NewChtCmd())
-	rootCmd.AddCommand(load.NewLoadCmd())
-	rootCmd.AddCommand(hash.NewHashCmd())
 	rootCmd.AddCommand(ai.NewAICmd())
+	rootCmd.AddCommand(cht.NewChtCmd())
+	rootCmd.AddCommand(du.NewDuCmd())
+	rootCmd.AddCommand(hash.NewHashCmd())
+	rootCmd.AddCommand(load.NewLoadCmd())
 	rootCmd.AddCommand(logread.NewLogReadCmd())
 
 	return rootCmd
