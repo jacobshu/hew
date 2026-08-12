@@ -20,10 +20,6 @@ This command performs various system-level configuration jobs to make life easie
 - symlinking config files and folders to their default locations
 - downloading and updating packages
 
-### `kinsta`
-
-Tools for using the Kinsta API.
-
 ### `cht`
 
 Lightweight language information.
