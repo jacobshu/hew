@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -19,9 +20,9 @@ import (
 )
 
 type symlink struct {
-	Source string
-	Target string
-	IsFile bool
+	Source    string `toml:"source"`
+	Target    string `toml:"target"`
+	WinTarget string `toml:"win_target"`
 }
 
 type symlinkConfig struct {
@@ -148,10 +149,19 @@ func readSymlinkConfig() []symlinkMsg {
 	var config symlinkConfig
 	_, err = toml.DecodeFile(symlinksConfigPath, &config)
 
+	log.Println("readSymlinkConfig...")
 	var s []symlinkMsg
+	os := runtime.GOOS
+
 	for _, l := range config.Dotfiles {
-		if l.Source == "" || l.Target == "" {
+		if l.Source == "" {
 			log.Printf("skipping entry without source or target: %+v", l)
+			continue
+		} else if os == "windows" && l.WinTarget == "" {
+			log.Printf("skipping entry without windows target: %+v", l)
+			continue
+		} else if l.Target == "" {
+			log.Printf("skipping entry without target: %+v", l)
 			continue
 		}
 		n := symlinkMsg{source: l.Source, target: l.Target}
