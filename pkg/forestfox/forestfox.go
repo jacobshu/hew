@@ -1,20 +1,21 @@
 package forestfox
 
 import (
+	stdcolor "image/color"
 	"log"
 	"os"
 	"path"
 	"runtime"
 
+	"charm.land/lipgloss/v2"
 	"github.com/BurntSushi/toml"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type color struct {
 	Value    string
 	Ghostty  []string
 	Prose    string
-	Lipgloss lipgloss.Color
+	Lipgloss stdcolor.Color
 }
 
 type Forestfox struct {

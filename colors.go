@@ -1,7 +1,7 @@
 package main
 
 //
-// import "github.com/charmbracelet/lipgloss"
+// import "charm.land/lipgloss/v2"
 //
 // var Forestfox = map[string]lipgloss.Color{
 // 	"bg":            lipgloss.Color("#283038"),

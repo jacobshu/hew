@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/BurntSushi/toml"
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 
 	"hew.jacobshu.dev/pkg/forestfox"
 )
@@ -61,11 +61,11 @@ type loadModel struct {
 	symlinksToCreate []symlinkMsg
 	symlinksCreated  int
 	quitting         bool
-  theme forestfox.Forestfox
+	theme            forestfox.Forestfox
 }
 
 func NewLoadModel() loadModel {
-  theme := forestfox.GetTheme()
+	theme := forestfox.GetTheme()
 	s := spinner.New()
 	s.Style = lipgloss.NewStyle().Foreground(theme.Blue.Lipgloss)
 	s.Spinner = spinner.Points
@@ -85,7 +85,7 @@ func (m loadModel) Init() tea.Cmd {
 
 func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		s := msg.String()
 		if s == "q" || s == "esc" || s == "ctrl+c" {
 			m.quitting = true
@@ -112,7 +112,7 @@ func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m loadModel) View() string {
+func (m loadModel) View() tea.View {
 	var s string
 
 	if m.quitting {
@@ -135,7 +135,7 @@ func (m loadModel) View() string {
 		s += "\n"
 	}
 
-	return appStyle.Render(s)
+	return tea.NewView(appStyle.Render(s))
 }
 
 func readSymlinkConfig() []symlinkMsg {

@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"hew.jacobshu.dev/pkg/forestfox"
 )
@@ -18,7 +18,6 @@ import (
 const (
 	language = iota
 	query
-	useHighPerformanceRenderer = false
 )
 
 type errMsg struct{ err error }
@@ -50,13 +49,13 @@ func InitialChtModel() chtModel {
 	inputs[language].Placeholder = "go "
 	inputs[language].Focus()
 	inputs[language].CharLimit = 44
-	inputs[language].Width = 50
+	inputs[language].SetWidth(50)
 	inputs[language].Prompt = ""
 
 	inputs[query] = textinput.New()
 	inputs[query].Placeholder = "slices  "
 	inputs[query].CharLimit = 100
-	inputs[query].Width = 50
+	inputs[query].SetWidth(50)
 	inputs[query].Prompt = ""
 
 	return chtModel{
@@ -79,18 +78,18 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		//cmds  []tea.Cmd
 	)
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "enter":
 			if m.focused == len(m.inputs) {
 				return m, getChtsh(m.inputs[0].Value(), m.inputs[1].Value())
 			}
 			m.nextInput()
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case "ctrl+c", "esc":
 			return m, tea.Quit
-		case tea.KeyShiftTab, tea.KeyCtrlP:
+		case "shift+tab", "ctrl+p":
 			m.prevInput()
-		case tea.KeyTab, tea.KeyCtrlN:
+		case "tab", "ctrl+n":
 			m.nextInput()
 		}
 
@@ -113,7 +112,7 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		//verticalMarginHeight := 8
 
 		if !m.ready {
-			vp := viewport.New(40, 20)
+			vp := viewport.New(viewport.WithWidth(40), viewport.WithHeight(20))
 			vp.Style = lipgloss.NewStyle().
 				Width(40).
 				Height(20).
@@ -123,16 +122,8 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			m.viewport = vp
 			m.viewport.YPosition = headerHeight
-			m.viewport.HighPerformanceRendering = useHighPerformanceRenderer
 			m.viewport.SetContent(m.content)
 			m.ready = true
-
-			// This is only necessary for high performance rendering
-			m.viewport.YPosition = headerHeight + 1
-		}
-		if useHighPerformanceRenderer {
-			// This is needed for high-performance rendering only.
-			cmds = append(cmds, viewport.Sync(m.viewport))
 		}
 	case errMsg:
 		m.err = msg
@@ -150,7 +141,7 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m chtModel) View() string {
+func (m chtModel) View() tea.View {
 	inputStyle := lipgloss.NewStyle().Foreground(m.theme.Magenta.Lipgloss)
 	continueStyle := lipgloss.NewStyle().Foreground(m.theme.Bg5.Lipgloss)
 	continueFocusStyle := lipgloss.NewStyle().Foreground(m.theme.Aqua.Lipgloss)
@@ -158,7 +149,7 @@ func (m chtModel) View() string {
 	log.Printf("frame size: %+v\nstyle w: %+v\nviewport w: %+v",
 		m.viewport.Style.GetHorizontalFrameSize(),
 		m.viewport.Style.GetWidth(),
-		m.viewport.Width)
+		m.viewport.Width())
 	var buttonStyle lipgloss.Style
 	if m.focused == len(m.inputs) {
 		buttonStyle = continueFocusStyle
@@ -166,7 +157,7 @@ func (m chtModel) View() string {
 		buttonStyle = continueStyle
 	}
 
-	return fmt.Sprintf(`
+	view := fmt.Sprintf(`
  %s %s
 
  %s %s
@@ -180,6 +171,11 @@ func (m chtModel) View() string {
 		buttonStyle.Render("Continue ->"),
 		m.viewport.View(),
 	) + "\n"
+
+	v := tea.NewView(view)
+	v.AltScreen = true                    // use the full size of the terminal in its "alternate screen buffer"
+	v.MouseMode = tea.MouseModeCellMotion // turn on mouse support so we can track the mouse wheel
+	return v
 }
 
 // nextInput focuses the next input field
