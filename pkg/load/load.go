@@ -150,6 +150,10 @@ func readSymlinkConfig() []symlinkMsg {
 
 	var s []symlinkMsg
 	for _, l := range config.Dotfiles {
+		if l.Source == "" || l.Target == "" {
+			log.Printf("skipping entry without source or target: %+v", l)
+			continue
+		}
 		n := symlinkMsg{source: l.Source, target: l.Target}
 		s = append(s, n)
 	}

@@ -72,9 +72,9 @@ func GetTheme() Forestfox {
 	os := runtime.GOOS
 	var ffPath string
 	if os == "windows" {
-		ffPath = path.Join(homeDir, "\\source\\repos\\dotfiles\\config\\forestfox.toml")
+		ffPath = path.Join(homeDir, "\\dev\\dotfiles\\config\\forestfox.toml")
 	} else if os == "darwin" { // "darwin" is the value for macOS
-		ffPath = path.Join(homeDir, "/dev/dotfiles/ff/forestfox.toml")
+		ffPath = path.Join(homeDir, "/dev/dotfiles/config/forestfox.toml")
 	}
 
 	var ff Forestfox
