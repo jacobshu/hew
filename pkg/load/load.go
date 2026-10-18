@@ -80,7 +80,10 @@ func NewLoadModel() loadModel {
 
 func (m loadModel) Init() tea.Cmd {
 	log.Println("loadModel Init")
-	return m.spinner.Tick
+	if len(m.symlinksToCreate) == 0 {
+		return tea.Quit
+	}
+	return tea.Batch(m.spinner.Tick, m.createSymlink)
 }
 
 func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -104,12 +107,8 @@ func (m loadModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 
 		return m, cmd
-	default:
-		if m.symlinksCreated == 0 {
-			return m, m.createSymlink
-		}
-		return m, nil
 	}
+	return m, nil
 }
 
 func (m loadModel) View() tea.View {
