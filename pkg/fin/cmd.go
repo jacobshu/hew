@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ func NewFinCmd() *cobra.Command {
 	}
 
 	finCmd.AddCommand(NewImportCmd())
+	finCmd.AddCommand(NewProcCmd())
 	return finCmd
 }
 
@@ -50,6 +52,23 @@ func NewImportCmd() *cobra.Command {
 				return fmt.Errorf("Error writing to target: %s: %v", target, err)
 			}
 
+			return nil
+		},
+	}
+}
+
+func NewProcCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "proc <year>",
+		Short: "process accounts",
+		Args:  cobra.RangeArgs(0, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sh := exec.Command("hledger", "--version")
+			sh.Stdout = os.Stdout
+			sh.Stderr = os.Stderr
+			if err := sh.Run(); err != nil {
+				return fmt.Errorf("error running hledger: %w", err)
+			}
 			return nil
 		},
 	}
