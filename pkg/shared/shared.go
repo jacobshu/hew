@@ -1,14 +1,18 @@
 package shared
 
-import (
-  "encoding/json"
-  "fmt"
-)
+// returns items in a that aren't in b
+func Difference(a, b []string) []string {
+	set := make(map[string]struct{}, len(b))
+	for _, val := range b {
+		set[val] = struct{}{}
+	}
 
-func Pprint(data interface{}) {
-  s, err := json.MarshalIndent(data, "", "\t")
-  if err != nil {
-    fmt.Printf("Pprint error\n%#v\n", err)
-  }
-  fmt.Println(string(s))
+	var diff []string
+	for _, s := range a {
+		if _, found := set[s]; !found {
+			diff = append(diff, s)
+		}
+	}
+
+	return diff
 }

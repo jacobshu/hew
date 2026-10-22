@@ -63,7 +63,7 @@ func InitialChtModel() chtModel {
 		focused: 0,
 		err:     nil,
 		ready:   false,
-		// theme:   forestfox.GetTheme(),
+		theme:   forestfox.GetTheme(),
 	}
 }
 
@@ -103,7 +103,7 @@ func (m chtModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.content = msg.String()
 		m.viewport, cmd = m.viewport.Update(msg)
 		log.Printf("chtshMsg: %+v", len(msg))
-		//m.response = msg.String()
+		m.response = msg.String()
 		return m, cmd
 
 	case tea.WindowSizeMsg:
@@ -146,10 +146,10 @@ func (m chtModel) View() tea.View {
 	continueStyle := lipgloss.NewStyle().Foreground(m.theme.Bg5.Lipgloss)
 	continueFocusStyle := lipgloss.NewStyle().Foreground(m.theme.Aqua.Lipgloss)
 
-	log.Printf("frame size: %+v\nstyle w: %+v\nviewport w: %+v",
-		m.viewport.Style.GetHorizontalFrameSize(),
-		m.viewport.Style.GetWidth(),
-		m.viewport.Width())
+	// log.Printf("frame size: %+v\nstyle w: %+v\nviewport w: %+v",
+	// 	m.viewport.Style.GetHorizontalFrameSize(),
+	// 	m.viewport.Style.GetWidth(),
+	// 	m.viewport.Width())
 	var buttonStyle lipgloss.Style
 	if m.focused == len(m.inputs) {
 		buttonStyle = continueFocusStyle
@@ -168,7 +168,7 @@ func (m chtModel) View() tea.View {
 		m.inputs[language].View(),
 		inputStyle.Width(10).Render("Query"),
 		m.inputs[query].View(),
-		buttonStyle.Render("Continue ->"),
+		buttonStyle.Render("Continue >"),
 		m.viewport.View(),
 	) + "\n"
 
@@ -198,6 +198,7 @@ func getChtsh(language string, query string) tea.Cmd {
 	return func() tea.Msg {
 		q := strings.Replace(query, " ", "+", -1)
 		url := fmt.Sprintf("https://cht.sh/%s/%s", language, q)
+		log.Println("requesting url: %s", url)
 
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"hew.jacobshu.dev/pkg/cht"
 	"hew.jacobshu.dev/pkg/du"
+	"hew.jacobshu.dev/pkg/fin"
 	"hew.jacobshu.dev/pkg/hash"
 	"hew.jacobshu.dev/pkg/load"
 )
@@ -21,6 +22,7 @@ func BuildCmdTree() *cobra.Command {
 
 	rootCmd.AddCommand(cht.NewChtCmd())
 	rootCmd.AddCommand(du.NewDuCmd())
+	rootCmd.AddCommand(fin.NewFinCmd())
 	rootCmd.AddCommand(hash.NewHashCmd())
 	rootCmd.AddCommand(load.NewLoadCmd())
 
