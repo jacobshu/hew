@@ -1,0 +1,57 @@
+{
+  "version": 2, 
+  "dotfiles": [
+    { 
+      "source": "dev/dotfiles/config/forestfox.yaml",
+      "target": ".warp/themes/forestfox.yaml"
+    },
+    {
+      "source": "dev/dotfiles/config/starship.toml",
+			"target": ".config/starship.toml"
+    },
+    {
+      "source": "dev/dotfiles/config/.zshrc",
+			"target": ".config/zsh/.zshrc"
+    },
+    {
+      "source": "dev/dotfiles/config/.zprofile",
+			"target": ".zprofile"
+    },
+    {
+      "source": "dev/dotfiles/config/wezterm.lua",
+      "target": "wezterm.lua",
+      "win_target": ".config/wezterm/wezterm.lua"
+    },
+
+    {
+      "source": "dev/dotfiles/config/Microsoft.PowerShell_profile.ps1",
+      "win_target": "%DOCUMENTS%/PowerShell/Microsoft.PowerShell_profile.ps1"
+    },
+    {
+      "source": "dev/dotfiles/config/tmux.conf",
+			"target": ".config/tmux/tmux.conf"
+    },
+    {
+      "source": "dev/dotfiles/config/config",
+			"target": ".config/ghostty/config"
+    },
+    {
+      "source": "dev/dotfiles/config/forestfox",
+			"target": ".config/ghostty/themes/forestfox"
+    },
+    {
+      "source": "dev/dotfiles/nvim",
+      "target": ".config/nvim",
+      "win_target": "%LOCALAPPDATA%/nvim"
+    },
+    {
+      "source": "dev/dotfiles/bin/netcoredbg",
+			"target": "/usr/local/bin/netcoredbg"
+    },
+    {
+      "source": "dev/dotfiles/config/clangd/config.yaml",
+      "target": ".config/clangd/config.yaml",
+      "win_target": "%LOCALAPPDATA%/clangd/config.yaml"
+    }
+  ]
+}

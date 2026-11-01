@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
+	// "path"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -63,12 +63,25 @@ func NewProcCmd() *cobra.Command {
 		Short: "process accounts",
 		Args:  cobra.RangeArgs(0, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			sh := exec.Command("hledger", "--version")
-			sh.Stdout = os.Stdout
-			sh.Stderr = os.Stderr
-			if err := sh.Run(); err != nil {
-				return fmt.Errorf("error running hledger: %w", err)
+			ExecHledger([]string{"--version"})
+
+			cfg, err := GetLedgerConfig()
+			if err != nil {
+				return fmt.Errorf("error getting directory: %w", err)
 			}
+
+			shared.PPrint(cfg)
+			// ccRules := filepath.Join(dir, "import", "cc.csv.rules")
+			// chRules := filepath.Join(dir, "import", "checking.csv.rules")
+			// for _, f := range srcFiles {
+			// 	if strings.Contains(f, "9050") {
+			// 		ExecHledger([]string{"print", "-f", f, "--rules", ccRules})
+			// 	} else {
+			// 		ExecHledger([]string{"print", "-f", f, "--rules", chRules})
+			// 	}
+			// }
+			//
+			// ExecHledger([]string{"-f", "main.journal", "check"})
 			return nil
 		},
 	}

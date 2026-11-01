@@ -1,12 +1,13 @@
 package load
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -14,19 +15,21 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/BurntSushi/toml"
 
 	"hew.jacobshu.dev/pkg/forestfox"
 )
 
+//go:embed symlinks.json
+var symlinkData []byte
+
 type symlink struct {
-	Source    string `toml:"source"`
-	Target    string `toml:"target"`
-	WinTarget string `toml:"win_target"`
+	Source    string `json:"source"`
+	Target    string `json:"target"`
+	WinTarget string `json:"win_target"`
 }
 
 type symlinkConfig struct {
-	Version  string
+	Version  int
 	Dotfiles []symlink
 }
 
@@ -70,7 +73,7 @@ func NewLoadModel() loadModel {
 	s := spinner.New()
 	s.Style = lipgloss.NewStyle().Foreground(theme.Blue.Lipgloss)
 	s.Spinner = spinner.Points
-	symlinksFromConfig := readSymlinkConfig()
+	symlinksFromConfig := GetSymlinkConfig()
 
 	return loadModel{
 		spinner:          s,
@@ -138,38 +141,28 @@ func (m loadModel) View() tea.View {
 	return tea.NewView(appStyle.Render(s))
 }
 
-func readSymlinkConfig() []symlinkMsg {
-	log.Println("readSymlinkConfig...")
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
+func GetSymlinkConfig() []symlinkMsg {
+	var cfg symlinkConfig
+	if err := json.Unmarshal(symlinkData, &cfg); err != nil {
+		log.Fatalf("error getting symlink config: %v", err)
 	}
 
-	var symlinksConfigPath = path.Join(homeDir, "/dev/dotfiles/config/symlinks.toml")
-	var config symlinkConfig
-	_, err = toml.DecodeFile(symlinksConfigPath, &config)
-
-	log.Println("readSymlinkConfig...")
 	var s []symlinkMsg
 	os := runtime.GOOS
 
-	for _, l := range config.Dotfiles {
+	for _, l := range cfg.Dotfiles {
 		if l.Source == "" {
-			log.Printf("skipping entry without source or target: %+v", l)
+			log.Printf("GetSymlinkConfig::skipping entry without source or target: %+v", l)
 			continue
 		} else if os == "windows" && l.WinTarget == "" {
-			log.Printf("skipping entry without windows target: %+v", l)
+			log.Printf("GetSymlinkConfig::skipping entry without windows target: %+v", l)
 			continue
 		} else if l.Target == "" {
-			log.Printf("skipping entry without target: %+v", l)
+			log.Printf("GetSymlinkConfig::skipping entry without target: %+v", l)
 			continue
 		}
 		n := symlinkMsg{source: l.Source, target: l.Target}
 		s = append(s, n)
-	}
-
-	if err != nil {
-		log.Printf("error reading toml: %+v", err)
 	}
 
 	return s
@@ -199,7 +192,7 @@ func (m *loadModel) createSymlink() tea.Msg {
 
 	if _, err := os.Stat(msg.target); os.IsNotExist(err) {
 		log.Printf("ensuring path for %+v: %+v", msg.target, err)
-		err := os.MkdirAll(filepath.Dir(msg.target), 0700)
+		err := os.MkdirAll(path.Dir(msg.target), 0700)
 		if err != nil {
 			log.Printf("%+v", err)
 			return err

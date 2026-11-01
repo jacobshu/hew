@@ -1,0 +1,11 @@
+{
+  "root": [ "dev", "finance"],
+  "main": [ "main.journal"],
+  "sourcesDir": [ "import", "raw" ],
+  "rulesDir": [ "import" ],
+  "rules": {
+    "9050": "cc.csv.rules",
+    "3373": "checking.csv.rules",
+    "6996": "checking.csv.rules"
+  }
+}

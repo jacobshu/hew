@@ -1,15 +1,16 @@
 package forestfox
 
 import (
+	_ "embed"
+	"encoding/json"
 	stdcolor "image/color"
 	"log"
-	"os"
-	"path"
-	"runtime"
 
 	"charm.land/lipgloss/v2"
-	"github.com/BurntSushi/toml"
 )
+
+//go:embed forestfox.json
+var ffData []byte
 
 type color struct {
 	Value    string
@@ -19,112 +20,100 @@ type color struct {
 }
 
 type Forestfox struct {
-	BgDim         color
-	Bg0           color
-	Bg1           color
-	Bg2           color
-	Bg3           color
-	Bg4           color
-	Bg5           color
-	Grey0         color
-	Grey1         color
-	Grey2         color
-	Grey3         color
-	Fg0           color
-	Fg1           color
-	Fg2           color
-	BgRed         color
-	DimRed        color
-	Red           color
-	BrightRed     color
-	BgGreen       color
-	DimGreen      color
-	Green         color
-	BrightGreen   color
-	BgYellow      color
-	DimYellow     color
-	Yellow        color
-	BrightYellow  color
-	BgBlue        color
-	DimBlue       color
-	Blue          color
-	BrightBlue    color
-	BgMagenta     color
-	DimMagenta    color
-	Magenta       color
-	BrightMagenta color
-	BgAqua        color
-	DimAqua       color
-	Aqua          color
-	BrightAqua    color
-	BgOrange      color
-	DimOrange     color
-	Orange        color
-	BrightOrange  color
+	BgDim         color `json:"bg_dim"`
+	Bg0           color `json:"bg0"`
+	Bg1           color `json:"bg1"`
+	Bg2           color `json:"bg2"`
+	Bg3           color `json:"bg3"`
+	Bg4           color `json:"bg4"`
+	Bg5           color `json:"bg5"`
+	Grey0         color `json:"grey0"`
+	Grey1         color `json:"grey1"`
+	Grey2         color `json:"grey2"`
+	Grey3         color `json:"grey3"`
+	Fg0           color `json:"fg0"`
+	Fg1           color `json:"fg1"`
+	Fg2           color `json:"fg2"`
+	BgRed         color `json:"bg_red"`
+	DimRed        color `json:"dim_red"`
+	Red           color `json:"red"`
+	BrightRed     color `json:"bright_red"`
+	BgGreen       color `json:"bg_green"`
+	DimGreen      color `json:"dim_green"`
+	Green         color `json:"green"`
+	BrightGreen   color `json:"bright_green"`
+	BgYellow      color `json:"bg_yellow"`
+	DimYellow     color `json:"dim_yellow"`
+	Yellow        color `json:"yellow"`
+	BrightYellow  color `json:"bright_yellow"`
+	BgBlue        color `json:"bg_blue"`
+	DimBlue       color `json:"dim_blue"`
+	Blue          color `json:"blue"`
+	BrightBlue    color `json:"bright_blue"`
+	BgMagenta     color `json:"bg_magenta"`
+	DimMagenta    color `json:"dim_magenta"`
+	Magenta       color `json:"magenta"`
+	BrightMagenta color `json:"bright_magenta"`
+	BgAqua        color `json:"bg_aqua"`
+	DimAqua       color `json:"dim_aqua"`
+	Aqua          color `json:"aqua"`
+	BrightAqua    color `json:"bright_aqua"`
+	BgOrange      color `json:"bg_orange"`
+	DimOrange     color `json:"dim_orange"`
+	Orange        color `json:"orange"`
+	BrightOrange  color `json:"bright_orange"`
 }
 
 func GetTheme() Forestfox {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	os := runtime.GOOS
-	var ffPath string
-	if os == "windows" {
-		ffPath = path.Join(homeDir, "\\dev\\dotfiles\\config\\forestfox.toml")
-	} else if os == "darwin" { // "darwin" is the value for macOS
-		ffPath = path.Join(homeDir, "/dev/dotfiles/config/forestfox.toml")
+	var cfg Forestfox
+	if err := json.Unmarshal(ffData, &cfg); err != nil {
+		log.Fatalf("error unmarshalling forestfox.json: %v", err)
 	}
 
 	var ff Forestfox
-	_, err = toml.DecodeFile(ffPath, &ff)
-	if err != nil {
-		log.Printf("error reading forestfox toml: %+v", err)
-	}
 
-	ff.BgDim.Lipgloss = lipgloss.Color(ff.BgDim.Value)
-	ff.Bg0.Lipgloss = lipgloss.Color(ff.Bg0.Value)
-	ff.Bg1.Lipgloss = lipgloss.Color(ff.Bg1.Value)
-	ff.Bg2.Lipgloss = lipgloss.Color(ff.Bg2.Value)
-	ff.Bg3.Lipgloss = lipgloss.Color(ff.Bg3.Value)
-	ff.Bg4.Lipgloss = lipgloss.Color(ff.Bg4.Value)
-	ff.Bg5.Lipgloss = lipgloss.Color(ff.Bg5.Value)
-	ff.Grey0.Lipgloss = lipgloss.Color(ff.Grey0.Value)
-	ff.Grey1.Lipgloss = lipgloss.Color(ff.Grey1.Value)
-	ff.Grey2.Lipgloss = lipgloss.Color(ff.Grey2.Value)
-	ff.Grey3.Lipgloss = lipgloss.Color(ff.Grey3.Value)
-	ff.Fg0.Lipgloss = lipgloss.Color(ff.Fg0.Value)
-	ff.Fg1.Lipgloss = lipgloss.Color(ff.Fg1.Value)
-	ff.Fg2.Lipgloss = lipgloss.Color(ff.Fg2.Value)
-	ff.BgRed.Lipgloss = lipgloss.Color(ff.BgRed.Value)
-	ff.DimRed.Lipgloss = lipgloss.Color(ff.DimRed.Value)
-	ff.Red.Lipgloss = lipgloss.Color(ff.Red.Value)
-	ff.BrightRed.Lipgloss = lipgloss.Color(ff.BrightRed.Value)
-	ff.BgGreen.Lipgloss = lipgloss.Color(ff.BgGreen.Value)
-	ff.DimGreen.Lipgloss = lipgloss.Color(ff.DimGreen.Value)
-	ff.Green.Lipgloss = lipgloss.Color(ff.Green.Value)
-	ff.BrightGreen.Lipgloss = lipgloss.Color(ff.BrightGreen.Value)
-	ff.BgYellow.Lipgloss = lipgloss.Color(ff.BgYellow.Value)
-	ff.DimYellow.Lipgloss = lipgloss.Color(ff.DimYellow.Value)
-	ff.Yellow.Lipgloss = lipgloss.Color(ff.Yellow.Value)
-	ff.BrightYellow.Lipgloss = lipgloss.Color(ff.BrightYellow.Value)
-	ff.BgBlue.Lipgloss = lipgloss.Color(ff.BgBlue.Value)
-	ff.DimBlue.Lipgloss = lipgloss.Color(ff.DimBlue.Value)
-	ff.Blue.Lipgloss = lipgloss.Color(ff.Blue.Value)
-	ff.BrightBlue.Lipgloss = lipgloss.Color(ff.BrightBlue.Value)
-	ff.BgMagenta.Lipgloss = lipgloss.Color(ff.BgMagenta.Value)
-	ff.DimMagenta.Lipgloss = lipgloss.Color(ff.DimMagenta.Value)
-	ff.Magenta.Lipgloss = lipgloss.Color(ff.Magenta.Value)
-	ff.BrightMagenta.Lipgloss = lipgloss.Color(ff.BrightMagenta.Value)
-	ff.BgAqua.Lipgloss = lipgloss.Color(ff.BgAqua.Value)
-	ff.DimAqua.Lipgloss = lipgloss.Color(ff.DimAqua.Value)
-	ff.Aqua.Lipgloss = lipgloss.Color(ff.Aqua.Value)
-	ff.BrightAqua.Lipgloss = lipgloss.Color(ff.BrightAqua.Value)
-	ff.BgOrange.Lipgloss = lipgloss.Color(ff.BgOrange.Value)
-	ff.DimOrange.Lipgloss = lipgloss.Color(ff.DimOrange.Value)
-	ff.Orange.Lipgloss = lipgloss.Color(ff.Orange.Value)
-	ff.BrightOrange.Lipgloss = lipgloss.Color(ff.BrightOrange.Value)
+	ff.BgDim.Lipgloss = lipgloss.Color(cfg.BgDim.Value)
+	ff.Bg0.Lipgloss = lipgloss.Color(cfg.Bg0.Value)
+	ff.Bg1.Lipgloss = lipgloss.Color(cfg.Bg1.Value)
+	ff.Bg2.Lipgloss = lipgloss.Color(cfg.Bg2.Value)
+	ff.Bg3.Lipgloss = lipgloss.Color(cfg.Bg3.Value)
+	ff.Bg4.Lipgloss = lipgloss.Color(cfg.Bg4.Value)
+	ff.Bg5.Lipgloss = lipgloss.Color(cfg.Bg5.Value)
+	ff.Grey0.Lipgloss = lipgloss.Color(cfg.Grey0.Value)
+	ff.Grey1.Lipgloss = lipgloss.Color(cfg.Grey1.Value)
+	ff.Grey2.Lipgloss = lipgloss.Color(cfg.Grey2.Value)
+	ff.Grey3.Lipgloss = lipgloss.Color(cfg.Grey3.Value)
+	ff.Fg0.Lipgloss = lipgloss.Color(cfg.Fg0.Value)
+	ff.Fg1.Lipgloss = lipgloss.Color(cfg.Fg1.Value)
+	ff.Fg2.Lipgloss = lipgloss.Color(cfg.Fg2.Value)
+	ff.BgRed.Lipgloss = lipgloss.Color(cfg.BgRed.Value)
+	ff.DimRed.Lipgloss = lipgloss.Color(cfg.DimRed.Value)
+	ff.Red.Lipgloss = lipgloss.Color(cfg.Red.Value)
+	ff.BrightRed.Lipgloss = lipgloss.Color(cfg.BrightRed.Value)
+	ff.BgGreen.Lipgloss = lipgloss.Color(cfg.BgGreen.Value)
+	ff.DimGreen.Lipgloss = lipgloss.Color(cfg.DimGreen.Value)
+	ff.Green.Lipgloss = lipgloss.Color(cfg.Green.Value)
+	ff.BrightGreen.Lipgloss = lipgloss.Color(cfg.BrightGreen.Value)
+	ff.BgYellow.Lipgloss = lipgloss.Color(cfg.BgYellow.Value)
+	ff.DimYellow.Lipgloss = lipgloss.Color(cfg.DimYellow.Value)
+	ff.Yellow.Lipgloss = lipgloss.Color(cfg.Yellow.Value)
+	ff.BrightYellow.Lipgloss = lipgloss.Color(cfg.BrightYellow.Value)
+	ff.BgBlue.Lipgloss = lipgloss.Color(cfg.BgBlue.Value)
+	ff.DimBlue.Lipgloss = lipgloss.Color(cfg.DimBlue.Value)
+	ff.Blue.Lipgloss = lipgloss.Color(cfg.Blue.Value)
+	ff.BrightBlue.Lipgloss = lipgloss.Color(cfg.BrightBlue.Value)
+	ff.BgMagenta.Lipgloss = lipgloss.Color(cfg.BgMagenta.Value)
+	ff.DimMagenta.Lipgloss = lipgloss.Color(cfg.DimMagenta.Value)
+	ff.Magenta.Lipgloss = lipgloss.Color(cfg.Magenta.Value)
+	ff.BrightMagenta.Lipgloss = lipgloss.Color(cfg.BrightMagenta.Value)
+	ff.BgAqua.Lipgloss = lipgloss.Color(cfg.BgAqua.Value)
+	ff.DimAqua.Lipgloss = lipgloss.Color(cfg.DimAqua.Value)
+	ff.Aqua.Lipgloss = lipgloss.Color(cfg.Aqua.Value)
+	ff.BrightAqua.Lipgloss = lipgloss.Color(cfg.BrightAqua.Value)
+	ff.BgOrange.Lipgloss = lipgloss.Color(cfg.BgOrange.Value)
+	ff.DimOrange.Lipgloss = lipgloss.Color(cfg.DimOrange.Value)
+	ff.Orange.Lipgloss = lipgloss.Color(cfg.Orange.Value)
+	ff.BrightOrange.Lipgloss = lipgloss.Color(cfg.BrightOrange.Value)
 
 	return ff
 }
